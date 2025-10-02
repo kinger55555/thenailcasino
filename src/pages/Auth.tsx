@@ -80,9 +80,16 @@ const Auth = () => {
       toast({ title: t.signInSuccess });
       navigate("/");
     } catch (error: any) {
+      const code = error?.code || "";
+      const description =
+        code === "email_not_confirmed"
+          ? (language === "ru"
+              ? 'В Supabase включено подтверждение email. Отключите "Confirm email", чтобы входить только по никнейму.'
+              : 'Email confirmation is enabled in Supabase. Turn off "Confirm email" to allow nickname-only login.')
+          : error?.message || t.authError;
       toast({
         title: t.authError,
-        description: error.message,
+        description,
         variant: "destructive",
       });
     } finally {
