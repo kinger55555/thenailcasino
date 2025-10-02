@@ -128,4 +128,14 @@ All colors MUST be HSL.
   .float-anim {
     animation: float 3s ease-in-out infinite;
   }
+
+  /* CS:GO Style Case Opening Scroll */
+  @keyframes case-scroll {
+    0% {
+      transform: translateX(0) translateY(-50%);
+    }
+    100% {
+      transform: translateX(calc(-100% + 50vw - 64px)) translateY(-50%);
+    }
+  }
 }

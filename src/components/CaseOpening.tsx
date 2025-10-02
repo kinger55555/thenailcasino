@@ -51,6 +51,8 @@ export const CaseOpening = ({ language, coins, onOpenSuccess }: CaseOpeningProps
   const [opening, setOpening] = useState(false);
   const [openedNail, setOpenedNail] = useState<any>(null);
   const [isDream, setIsDream] = useState(false);
+  const [scrollItems, setScrollItems] = useState<any[]>([]);
+  const [isAnimating, setIsAnimating] = useState(false);
   const { toast } = useToast();
   const t = translations[language];
 
@@ -89,8 +91,20 @@ export const CaseOpening = ({ language, coins, onOpenSuccess }: CaseOpeningProps
       // Select random nail
       const selectedNail = availableNails[Math.floor(Math.random() * availableNails.length)];
 
-      // Simulate opening animation
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Generate scroll strip (50 items)
+      const strip = [];
+      for (let i = 0; i < 50; i++) {
+        const randomNail = availableNails[Math.floor(Math.random() * availableNails.length)];
+        const randomDream = Math.random() < 0.1;
+        strip.push({ ...randomNail, isDream: randomDream, key: `item-${i}` });
+      }
+      // Place winning item at position 45 (near the end)
+      strip[45] = { ...selectedNail, isDream: dreamRoll, key: 'winning-item' };
+      setScrollItems(strip);
+
+      // Start animation
+      setIsAnimating(true);
+      await new Promise(resolve => setTimeout(resolve, 5000));
 
       // Get current profile
       const { data: { user } } = await supabase.auth.getUser();
@@ -130,6 +144,7 @@ export const CaseOpening = ({ language, coins, onOpenSuccess }: CaseOpeningProps
       });
     } finally {
       setOpening(false);
+      setIsAnimating(false);
     }
   };
 
@@ -137,7 +152,41 @@ export const CaseOpening = ({ language, coins, onOpenSuccess }: CaseOpeningProps
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-primary">{t.cases}</h2>
 
-      {openedNail && (
+      {/* CS:GO Style Animation */}
+      {isAnimating && scrollItems.length > 0 && (
+        <div className="relative w-full h-48 overflow-hidden rounded-lg border-2 border-primary bg-background/50 backdrop-blur">
+          {/* Central Selector */}
+          <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-primary z-20 shadow-[0_0_20px_rgba(var(--primary),0.8)]" />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[20px] border-t-primary z-20" />
+          
+          {/* Scrolling Strip */}
+          <div 
+            className="absolute top-1/2 -translate-y-1/2 flex gap-4 px-4"
+            style={{
+              animation: 'case-scroll 5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards',
+              left: '100%'
+            }}
+          >
+            {scrollItems.map((item, idx) => (
+              <div
+                key={item.key}
+                className="flex-shrink-0 w-32 h-40 rounded-lg border-2 p-2 flex flex-col items-center justify-center gap-2"
+                style={{
+                  borderColor: `var(--${item.rarity})`,
+                  backgroundColor: item.isDream ? 'rgba(var(--dream), 0.1)' : 'rgba(var(--background), 0.8)'
+                }}
+              >
+                <span className="text-xs font-bold text-center" style={{ color: `var(--${item.rarity})` }}>
+                  {language === "ru" ? item.name_ru : item.name}
+                </span>
+                {item.isDream && <Sparkles className="h-4 w-4 text-dream" />}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {openedNail && !isAnimating && (
         <div className="case-reveal">
           <NailCard nail={openedNail} isDream={isDream} language={language} />
         </div>
