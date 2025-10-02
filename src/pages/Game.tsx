@@ -10,6 +10,7 @@ import { Inventory } from "@/components/Inventory";
 import { Combat } from "@/components/Combat";
 import { Shop } from "@/components/Shop";
 import { AdminPanel } from "@/components/AdminPanel";
+import { CurrencyConverter } from "@/components/CurrencyConverter";
 import { useToast } from "@/hooks/use-toast";
 import dreamSymbol from "@/assets/dream-symbol.png";
 
@@ -153,6 +154,15 @@ const Game = () => {
           dreamPoints={profile.dream_points}
           masks={profile.masks}
           language={language}
+          onUpdate={loadProfile}
+        />
+
+        {/* Currency Converter */}
+        <CurrencyConverter
+          language={language}
+          soul={profile.soul}
+          dreamPoints={profile.dream_points}
+          onUpdate={loadProfile}
         />
 
         {/* Main Content */}

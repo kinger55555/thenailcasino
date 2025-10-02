@@ -3,9 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Trash2, Gift } from "lucide-react";
+import { Sparkles, Trash2, Gift, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { NailCard } from "./NailCard";
+import QRCode from "react-qr-code";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,6 +43,10 @@ const translations = {
     copyLink: "Copy Link",
     close: "Close",
     linkCopied: "Link copied to clipboard!",
+    howItWorks: "How it works",
+    tradeExplanation: "When you create a trade link, you immediately lose the nail from your inventory. Share the QR code or link with a friend - they can scan it to receive the nail!",
+    scanToReceive: "Scan this QR code to receive the nail",
+    warning: "Warning: The nail has already been removed from your inventory!",
   },
   ru: {
     inventory: "Ваш Инвентарь",
@@ -60,6 +65,10 @@ const translations = {
     copyLink: "Копировать Ссылку",
     close: "Закрыть",
     linkCopied: "Ссылка скопирована в буфер обмена!",
+    howItWorks: "Как это работает",
+    tradeExplanation: "Когда вы создаете ссылку обмена, вы сразу теряете гвоздь из инвентаря. Поделитесь QR-кодом или ссылкой с другом - он может отсканировать её, чтобы получить гвоздь!",
+    scanToReceive: "Отсканируйте этот QR-код, чтобы получить гвоздь",
+    warning: "Внимание: Гвоздь уже удалён из вашего инвентаря!",
   },
 };
 
@@ -179,6 +188,15 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
 
       const code = Math.random().toString(36).substring(2, 10).toUpperCase();
 
+      // First, delete the nail from user's inventory
+      const { error: deleteError } = await supabase
+        .from("user_nails")
+        .delete()
+        .eq("id", selectedNail.id);
+
+      if (deleteError) throw deleteError;
+
+      // Then create the trade link
       const { error } = await supabase
         .from("trade_links")
         .insert({
@@ -192,6 +210,7 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
       const link = `${window.location.origin}/trade/${code}`;
       setTradeLink(link);
       setShowTradeDialog(true);
+      loadInventory();
 
       toast({ title: t.tradeLinkCreated });
     } catch (error: any) {
@@ -290,18 +309,43 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
 
       {/* Trade Link Dialog */}
       <AlertDialog open={showTradeDialog} onOpenChange={setShowTradeDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>{t.tradeLink}</AlertDialogTitle>
-            <AlertDialogDescription>{t.tradeLinkCreated}</AlertDialogDescription>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Gift className="h-5 w-5" />
+              {t.tradeLink}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4">
+              <div className="bg-destructive/10 border border-destructive/50 rounded-md p-3 flex items-start gap-2">
+                <Info className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-destructive">{t.warning}</p>
+              </div>
+              
+              <div className="bg-muted/50 rounded-md p-3">
+                <p className="text-sm font-semibold mb-2">{t.howItWorks}</p>
+                <p className="text-xs text-muted-foreground">{t.tradeExplanation}</p>
+              </div>
+            </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="space-y-2">
-            <Label>{t.tradeLink}</Label>
-            <div className="flex gap-2">
-              <Input value={tradeLink} readOnly />
-              <Button onClick={copyTradeLink}>{t.copyLink}</Button>
+          
+          <div className="space-y-4">
+            {/* QR Code */}
+            <div className="flex justify-center p-4 bg-white rounded-lg">
+              <QRCode value={tradeLink} size={200} />
+            </div>
+            
+            <p className="text-center text-sm text-muted-foreground">{t.scanToReceive}</p>
+            
+            {/* Link */}
+            <div className="space-y-2">
+              <Label>{t.tradeLink}</Label>
+              <div className="flex gap-2">
+                <Input value={tradeLink} readOnly className="text-xs" />
+                <Button onClick={copyTradeLink} size="sm">{t.copyLink}</Button>
+              </div>
             </div>
           </div>
+          
           <AlertDialogFooter>
             <AlertDialogAction>{t.close}</AlertDialogAction>
           </AlertDialogFooter>

@@ -1,13 +1,18 @@
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Minus } from "lucide-react";
 import maskImage from "@/assets/mask.webp";
 import soulIcon from "@/assets/soul-icon.png";
 import dreamIcon from "@/assets/dream-icon.png";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface CurrencyDisplayProps {
   soul: number;
   dreamPoints: number;
   masks: number;
   language: "en" | "ru";
+  onUpdate?: () => void;
 }
 
 const translations = {
@@ -23,8 +28,33 @@ const translations = {
   },
 };
 
-export const CurrencyDisplay = ({ soul, dreamPoints, masks, language }: CurrencyDisplayProps) => {
+export const CurrencyDisplay = ({ soul, dreamPoints, masks, language, onUpdate }: CurrencyDisplayProps) => {
   const t = translations[language];
+  const { toast } = useToast();
+
+  const handleResetDreamPoints = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase
+        .from("profiles")
+        .update({ dream_points: 0 })
+        .eq("id", user.id);
+
+      toast({ 
+        title: language === "ru" ? "Очки снов сброшены" : "Dream points reset" 
+      });
+      
+      if (onUpdate) onUpdate();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="grid grid-cols-3 gap-3">
@@ -39,12 +69,24 @@ export const CurrencyDisplay = ({ soul, dreamPoints, masks, language }: Currency
       </Card>
 
       <Card className="p-3 bg-card/50 backdrop-blur border-border/50">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <img src={dreamIcon} alt="Dream Points" className="h-5 w-5" />
             <span className="text-sm text-muted-foreground">{t.dreamPoints}</span>
           </div>
-          <span className="font-bold text-dream">{dreamPoints}</span>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-dream">{dreamPoints}</span>
+            {dreamPoints > 0 && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6"
+                onClick={handleResetDreamPoints}
+              >
+                <Minus className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
         </div>
       </Card>
 
