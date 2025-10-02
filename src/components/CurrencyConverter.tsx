@@ -28,6 +28,8 @@ const translations = {
     insufficientFunds: "Insufficient funds",
     conversionSuccess: "Conversion successful!",
     rate: "Exchange Rate: 100 Soul = 1 Dream Point",
+    exchanges: "exchanges",
+    totalCost: "Total cost",
   },
   ru: {
     title: "Конвертер Валют",
@@ -40,6 +42,8 @@ const translations = {
     insufficientFunds: "Недостаточно средств",
     conversionSuccess: "Конвертация успешна!",
     rate: "Курс обмена: 100 Души = 1 Очко Снов",
+    exchanges: "обменов",
+    totalCost: "Общая стоимость",
   },
 };
 
@@ -50,8 +54,8 @@ export const CurrencyConverter = ({ language, soul, dreamPoints, onUpdate }: Cur
   const t = translations[language];
 
   const handleConvert = async () => {
-    const convertAmount = parseInt(amount);
-    if (!convertAmount || convertAmount <= 0) {
+    const numExchanges = parseInt(amount);
+    if (!numExchanges || numExchanges <= 0) {
       toast({
         title: language === "ru" ? "Введите количество" : "Enter amount",
         variant: "destructive",
@@ -64,30 +68,24 @@ export const CurrencyConverter = ({ language, soul, dreamPoints, onUpdate }: Cur
       if (!user) return;
 
       if (fromCurrency === "soul") {
-        if (soul < convertAmount) {
-          toast({ title: t.insufficientFunds, variant: "destructive" });
-          return;
-        }
-
-        const dreamPointsToAdd = Math.floor(convertAmount / 100);
+        // Amount = number of exchanges (100 soul per exchange)
+        const totalSoulNeeded = numExchanges * 100;
         
-        if (dreamPointsToAdd === 0) {
-          toast({ 
-            title: language === "ru" ? "Минимум 100 души для обмена" : "Minimum 100 soul to convert",
-            variant: "destructive" 
-          });
+        if (soul < totalSoulNeeded) {
+          toast({ title: t.insufficientFunds, variant: "destructive" });
           return;
         }
 
         await supabase
           .from("profiles")
           .update({
-            soul: soul - convertAmount,
-            dream_points: dreamPoints + dreamPointsToAdd,
+            soul: soul - totalSoulNeeded,
+            dream_points: dreamPoints + numExchanges,
           })
           .eq("id", user.id);
       } else {
-        if (dreamPoints < convertAmount) {
+        // Amount = number of dream points to convert
+        if (dreamPoints < numExchanges) {
           toast({ title: t.insufficientFunds, variant: "destructive" });
           return;
         }
@@ -95,8 +93,8 @@ export const CurrencyConverter = ({ language, soul, dreamPoints, onUpdate }: Cur
         await supabase
           .from("profiles")
           .update({
-            dream_points: dreamPoints - convertAmount,
-            soul: soul + (convertAmount * 100),
+            dream_points: dreamPoints - numExchanges,
+            soul: soul + (numExchanges * 100),
           })
           .eq("id", user.id);
       }
@@ -174,7 +172,11 @@ export const CurrencyConverter = ({ language, soul, dreamPoints, onUpdate }: Cur
 
         {/* Amount Input */}
         <div className="space-y-2">
-          <Label>{t.amount}</Label>
+          <Label>
+            {fromCurrency === "soul" 
+              ? `${t.amount} ${t.exchanges}` 
+              : `${t.amount} ${t.dreamPoints}`}
+          </Label>
           <Input
             type="number"
             value={amount}
@@ -182,6 +184,11 @@ export const CurrencyConverter = ({ language, soul, dreamPoints, onUpdate }: Cur
             placeholder="0"
             min="1"
           />
+          {fromCurrency === "soul" && amount && parseInt(amount) > 0 && (
+            <p className="text-sm text-muted-foreground">
+              {t.totalCost}: {parseInt(amount) * 100} {t.soul}
+            </p>
+          )}
         </div>
 
         {/* Convert Button */}

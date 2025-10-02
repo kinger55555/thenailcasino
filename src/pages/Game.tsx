@@ -11,6 +11,7 @@ import { Combat } from "@/components/Combat";
 import { Shop } from "@/components/Shop";
 import { AdminPanel } from "@/components/AdminPanel";
 import { CurrencyConverter } from "@/components/CurrencyConverter";
+import { Rules } from "@/components/Rules";
 import { useToast } from "@/hooks/use-toast";
 import dreamSymbol from "@/assets/dream-symbol.png";
 
@@ -20,6 +21,7 @@ const translations = {
     inventory: "Inventory",
     combat: "Combat",
     shop: "Shop",
+    rules: "Rules",
     admin: "Admin",
     logout: "Logout",
     loading: "Loading...",
@@ -29,6 +31,7 @@ const translations = {
     inventory: "Инвентарь",
     combat: "Бой",
     shop: "Магазин",
+    rules: "Правила",
     admin: "Админ",
     logout: "Выход",
     loading: "Загрузка...",
@@ -167,11 +170,12 @@ const Game = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="cases" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="cases">{t.cases}</TabsTrigger>
             <TabsTrigger value="inventory">{t.inventory}</TabsTrigger>
             <TabsTrigger value="combat">{t.combat}</TabsTrigger>
             <TabsTrigger value="shop">{t.shop}</TabsTrigger>
+            <TabsTrigger value="rules">{t.rules}</TabsTrigger>
             <TabsTrigger value="admin">{t.admin}</TabsTrigger>
           </TabsList>
 
@@ -199,6 +203,10 @@ const Game = () => {
               masks={profile.masks}
               onUpdate={loadProfile}
             />
+          </TabsContent>
+
+          <TabsContent value="rules" className="mt-6">
+            <Rules language={language} />
           </TabsContent>
 
           <TabsContent value="admin" className="mt-6">
