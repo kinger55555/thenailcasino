@@ -167,42 +167,62 @@ export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps)
               left: '100%'
             }}
           >
-            {scrollItems.map((item, idx) => (
-              <div
-                key={item.key}
-                className="flex-shrink-0 w-32 h-40 rounded-lg p-2 flex flex-col items-center justify-center gap-2 relative overflow-hidden"
-                style={{
-                  borderWidth: '2px',
-                  borderStyle: 'solid',
-                  borderColor: `hsl(var(--${item.rarity}))`,
-                  backgroundColor: item.isDream 
-                    ? `hsl(var(--${item.rarity}) / 0.2)` 
-                    : `hsl(var(--${item.rarity}) / 0.1)`,
-                  boxShadow: `0 0 20px hsl(var(--${item.rarity}) / 0.4)`
-                }}
-              >
-                <div 
-                  className="absolute inset-0 opacity-10"
-                  style={{ 
-                    background: `linear-gradient(135deg, hsl(var(--${item.rarity})) 0%, transparent 100%)` 
+            {scrollItems.map((item, idx) => {
+              const isWinning = item.key === 'winning-item';
+              return (
+                <div
+                  key={item.key}
+                  className={`flex-shrink-0 w-32 h-40 rounded-lg p-2 flex flex-col items-center justify-center gap-2 relative overflow-hidden transition-all ${
+                    isWinning ? 'scale-110 z-10' : ''
+                  }`}
+                  style={{
+                    borderWidth: isWinning ? '3px' : '2px',
+                    borderStyle: 'solid',
+                    borderColor: `hsl(var(--${item.rarity}))`,
+                    backgroundColor: item.isDream 
+                      ? `hsl(var(--${item.rarity}) / 0.2)` 
+                      : `hsl(var(--${item.rarity}) / 0.1)`,
+                    boxShadow: isWinning 
+                      ? `0 0 30px hsl(var(--${item.rarity}) / 0.8)`
+                      : `0 0 20px hsl(var(--${item.rarity}) / 0.4)`
                   }}
-                />
-                <span 
-                  className="text-xs font-bold text-center relative z-10" 
-                  style={{ color: `hsl(var(--${item.rarity}))` }}
                 >
-                  {language === "ru" ? item.name_ru : item.name}
-                </span>
-                {item.isDream && <Sparkles className="h-4 w-4 text-dream relative z-10" />}
-              </div>
-            ))}
+                  <div 
+                    className="absolute inset-0 opacity-10"
+                    style={{ 
+                      background: `linear-gradient(135deg, hsl(var(--${item.rarity})) 0%, transparent 100%)` 
+                    }}
+                  />
+                  <span 
+                    className="text-xs font-bold text-center relative z-10" 
+                    style={{ color: `hsl(var(--${item.rarity}))` }}
+                  >
+                    {language === "ru" ? item.name_ru : item.name}
+                  </span>
+                  {item.isDream && <Sparkles className="h-4 w-4 text-dream relative z-10" />}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
 
       {openedNail && !isAnimating && (
-        <div className="case-reveal">
-          <NailCard nail={openedNail} isDream={isDream} language={language} />
+        <div className="case-reveal space-y-4">
+          <div className="text-center">
+            <h3 className="text-2xl font-bold mb-2" style={{ color: `hsl(var(--${openedNail.rarity}))` }}>
+              {t.youGot}
+            </h3>
+            <div className="inline-block p-6 rounded-xl border-2" style={{
+              borderColor: `hsl(var(--${openedNail.rarity}))`,
+              backgroundColor: isDream 
+                ? `hsl(var(--${openedNail.rarity}) / 0.15)` 
+                : `hsl(var(--${openedNail.rarity}) / 0.1)`,
+              boxShadow: `0 0 40px hsl(var(--${openedNail.rarity}) / 0.5)`
+            }}>
+              <NailCard nail={openedNail} isDream={isDream} language={language} />
+            </div>
+          </div>
         </div>
       )}
 
