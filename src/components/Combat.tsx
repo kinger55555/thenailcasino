@@ -57,6 +57,7 @@ const translations = {
     noDreamNail: "You need a Dream Nail to enter Dream Battles!",
     selectDifficulty: "Select Difficulty",
     rewards: "Rewards",
+    bonusAttack: "Bonus Attack! Hit green again!",
   },
   ru: {
     combat: "Арена Боя",
@@ -83,6 +84,7 @@ const translations = {
     noDreamNail: "Вам нужен Гвоздь Снов для Боя Снов!",
     selectDifficulty: "Выберите Сложность",
     rewards: "Награды",
+    bonusAttack: "Бонусная Атака! Попадите в зеленую снова!",
   },
 };
 
@@ -209,11 +211,13 @@ export const Combat = ({ language, onUpdate }: CombatProps) => {
     // Calculate damage based on timing
     let damageMultiplier = 0.5; // Missed
     let hitQuality = t.missed;
+    let isPerfectHit = false;
 
     // Perfect zone: 45-55 (green) - smaller zone
     if (timingBar >= 45 && timingBar <= 55) {
       damageMultiplier = 2.5;
       hitQuality = t.perfectHit;
+      isPerfectHit = true;
     }
     // Good zone: 35-65
     else if (timingBar >= 35 && timingBar <= 65) {
@@ -232,30 +236,55 @@ export const Combat = ({ language, onUpdate }: CombatProps) => {
       description: `${playerDamage} ${language === "ru" ? "урона" : "damage"}`,
     });
 
-    // Enemy attacks
-    const newPlayerHealth = Math.max(0, playerHealth - enemyDamage);
-    setPlayerHealth(newPlayerHealth);
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Player attacks
+    // Player attacks enemy
     const newEnemyHealth = Math.max(0, enemyHealth - playerDamage);
     setEnemyHealth(newEnemyHealth);
 
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // Check win/loss
+    // Check if enemy is defeated
     if (newEnemyHealth <= 0) {
       await handleVictory();
-    } else if (newPlayerHealth <= 0) {
-      await handleDefeat();
-    } else {
-      // Continue battle - restart timing
+      setBattling(false);
+      return;
+    }
+
+    // If perfect hit, give bonus attack
+    if (isPerfectHit) {
+      toast({
+        title: t.bonusAttack,
+        description: language === "ru" ? "Враг не атакует!" : "Enemy doesn't attack!",
+      });
+      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      
+      // Restart timing for bonus attack
       setIsTimingActive(true);
       setTimingBar(0);
       setTimingDirection(1);
+      setBattling(false);
+      return;
     }
 
+    // Enemy attacks (only if not perfect hit)
+    const newPlayerHealth = Math.max(0, playerHealth - enemyDamage);
+    setPlayerHealth(newPlayerHealth);
+
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Check if player is defeated
+    if (newPlayerHealth <= 0) {
+      await handleDefeat();
+      setBattling(false);
+      return;
+    }
+
+    // Continue battle - restart timing
+    setIsTimingActive(true);
+    setTimingBar(0);
+    setTimingDirection(1);
     setBattling(false);
   };
 
