@@ -130,16 +130,20 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
       if (deleteError) throw deleteError;
 
       // Get current profile and add soul
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("soul")
         .eq("id", user.id)
         .single();
 
-      await supabase
+      if (profileError) throw profileError;
+
+      const { error: updateError } = await supabase
         .from("profiles")
         .update({ soul: (profile?.soul || 0) + sellValue })
         .eq("id", user.id);
+
+      if (updateError) throw updateError;
 
       toast({
         title: `${t.youWillGet} ${sellValue} ${language === "ru" ? "Души" : "Soul"}`,
