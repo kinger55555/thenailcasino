@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles } from "lucide-react";
+import nailsSprite from "@/assets/nails-sprite.png";
 
 interface NailCardProps {
   nail: {
@@ -11,6 +12,7 @@ interface NailCardProps {
     base_damage: number;
     sell_value: number;
     dream_sell_value: number;
+    order_index?: number;
   };
   isDream?: boolean;
   language: "en" | "ru";
@@ -43,6 +45,16 @@ export const NailCard = ({ nail, isDream, language, onClick, className }: NailCa
         </div>
       )}
       <div className="space-y-2">
+        <div className="flex justify-center mb-3">
+          <div 
+            className="w-16 h-32 bg-contain bg-no-repeat bg-center"
+            style={{
+              backgroundImage: `url(${nailsSprite})`,
+              backgroundPosition: `${(nail.order_index || 0) * -64}px 0px`,
+              backgroundSize: `${64 * 5}px 128px`
+            }}
+          />
+        </div>
         <div className="flex items-center justify-between">
           <h3 className="font-bold text-lg">{nailName}</h3>
           <Badge variant="outline" className={rarityColors[nail.rarity]}>
