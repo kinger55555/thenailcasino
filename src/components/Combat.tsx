@@ -31,6 +31,11 @@ const translations = {
     cost: "Cost",
     masks: "Masks",
     damage: "Damage",
+    perfectHit: "Perfect Hit!",
+    goodHit: "Good Hit",
+    missed: "Missed!",
+    pressNow: "Press when the bar is in the GREEN zone!",
+    noDreamNail: "You need a Dream Nail to enter Dream Battles!",
   },
   ru: {
     combat: "Арена Боя",
@@ -50,6 +55,11 @@ const translations = {
     cost: "Цена",
     masks: "Маски",
     damage: "Урон",
+    perfectHit: "Идеальный Удар!",
+    goodHit: "Хороший Удар",
+    missed: "Промах!",
+    pressNow: "Нажмите, когда полоса в ЗЕЛЕНОЙ зоне!",
+    noDreamNail: "Вам нужен Гвоздь Снов для Боя Снов!",
   },
 };
 
@@ -61,12 +71,31 @@ export const Combat = ({ language, onUpdate }: CombatProps) => {
   const [playerHealth, setPlayerHealth] = useState(100);
   const [enemyHealth, setEnemyHealth] = useState(100);
   const [battling, setBattling] = useState(false);
+  const [timingBar, setTimingBar] = useState(0);
+  const [isTimingActive, setIsTimingActive] = useState(false);
+  const [timingDirection, setTimingDirection] = useState(1);
   const { toast } = useToast();
   const t = translations[language];
 
   useEffect(() => {
     loadNails();
   }, []);
+
+  useEffect(() => {
+    if (!isTimingActive) return;
+
+    const interval = setInterval(() => {
+      setTimingBar((prev) => {
+        const next = prev + timingDirection * 2;
+        if (next >= 100 || next <= 0) {
+          setTimingDirection((d) => -d);
+        }
+        return Math.max(0, Math.min(100, next));
+      });
+    }, 20);
+
+    return () => clearInterval(interval);
+  }, [isTimingActive, timingDirection]);
 
   const loadNails = async () => {
     try {
@@ -94,6 +123,15 @@ export const Combat = ({ language, onUpdate }: CombatProps) => {
 
   const startBattle = async (isDream: boolean) => {
     if (!selectedNail) return;
+
+    // Check if trying to do dream battle without dream nail
+    if (isDream && !selectedNail.is_dream) {
+      toast({
+        title: t.noDreamNail,
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -124,6 +162,9 @@ export const Combat = ({ language, onUpdate }: CombatProps) => {
       setInBattle(true);
       setPlayerHealth(100);
       setEnemyHealth(100);
+      setIsTimingActive(true);
+      setTimingBar(0);
+      setTimingDirection(1);
       onUpdate();
     } catch (error: any) {
       toast({
@@ -135,11 +176,34 @@ export const Combat = ({ language, onUpdate }: CombatProps) => {
   };
 
   const attack = async () => {
-    if (battling || !selectedNail) return;
+    if (battling || !selectedNail || !isTimingActive) return;
     setBattling(true);
+    setIsTimingActive(false);
 
-    const playerDamage = selectedNail.nails.base_damage + Math.floor(Math.random() * 10);
+    // Calculate damage based on timing
+    let damageMultiplier = 0.5; // Missed
+    let hitQuality = t.missed;
+
+    // Perfect zone: 40-60 (green)
+    if (timingBar >= 40 && timingBar <= 60) {
+      damageMultiplier = 2.0;
+      hitQuality = t.perfectHit;
+    }
+    // Good zone: 30-70
+    else if (timingBar >= 30 && timingBar <= 70) {
+      damageMultiplier = 1.5;
+      hitQuality = t.goodHit;
+    }
+
+    const playerDamage = Math.floor(
+      (selectedNail.nails.base_damage + Math.floor(Math.random() * 10)) * damageMultiplier
+    );
     const enemyDamage = 15 + Math.floor(Math.random() * 10);
+
+    toast({
+      title: hitQuality,
+      description: `${playerDamage} ${language === "ru" ? "урона" : "damage"}`,
+    });
 
     // Enemy attacks
     const newPlayerHealth = Math.max(0, playerHealth - enemyDamage);
@@ -158,6 +222,11 @@ export const Combat = ({ language, onUpdate }: CombatProps) => {
       await handleVictory();
     } else if (newPlayerHealth <= 0) {
       await handleDefeat();
+    } else {
+      // Continue battle - restart timing
+      setIsTimingActive(true);
+      setTimingBar(0);
+      setTimingDirection(1);
     }
 
     setBattling(false);
@@ -270,8 +339,27 @@ export const Combat = ({ language, onUpdate }: CombatProps) => {
           </Card>
         </div>
 
-        <div className="text-center">
-          <Button size="lg" onClick={attack} disabled={battling}>
+        <div className="text-center space-y-4">
+          {/* Timing Bar */}
+          <div className="max-w-md mx-auto space-y-2">
+            <p className="text-sm text-muted-foreground">{t.pressNow}</p>
+            <div className="relative h-12 bg-background border-2 border-border rounded-lg overflow-hidden">
+              {/* Red zones */}
+              <div className="absolute inset-0 bg-danger/20" />
+              {/* Yellow zones */}
+              <div className="absolute left-[30%] right-[30%] inset-y-0 bg-legendary/30" />
+              {/* Green zone (perfect) */}
+              <div className="absolute left-[40%] right-[40%] inset-y-0 bg-success/40" />
+              
+              {/* Moving indicator */}
+              <div
+                className="absolute top-0 bottom-0 w-1 bg-primary shadow-[0_0_10px_rgba(var(--primary),0.8)]"
+                style={{ left: `${timingBar}%` }}
+              />
+            </div>
+          </div>
+
+          <Button size="lg" onClick={attack} disabled={battling || !isTimingActive}>
             {t.attack}
           </Button>
         </div>
@@ -343,13 +431,17 @@ export const Combat = ({ language, onUpdate }: CombatProps) => {
               <h3 className="font-bold text-xl text-dream">{t.dreamBattle}</h3>
             </div>
             <p className="text-sm text-muted-foreground">
-              {language === "ru" ? "Сражайтесь за Душу и Очки Снов" : "Battle for Soul and Dream Points"}
+              {language === "ru" ? "Сражайтесь за Душу и Очки Снов (требуется Гвоздь Снов)" : "Battle for Soul and Dream Points (requires Dream Nail)"}
             </p>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">{t.cost}:</span>
               <span className="font-bold">1 {t.masks}</span>
             </div>
-            <Button className="w-full" onClick={() => startBattle(true)}>
+            <Button 
+              className="w-full" 
+              onClick={() => startBattle(true)}
+              disabled={!selectedNail?.is_dream}
+            >
               {t.startBattle}
             </Button>
           </Card>
