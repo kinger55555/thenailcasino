@@ -188,15 +188,7 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
 
       const code = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-      // First, delete the nail from user's inventory
-      const { error: deleteError } = await supabase
-        .from("user_nails")
-        .delete()
-        .eq("id", selectedNail.id);
-
-      if (deleteError) throw deleteError;
-
-      // Then create the trade link
+      // First create the trade link
       const { error } = await supabase
         .from("trade_links")
         .insert({
@@ -206,6 +198,14 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
         });
 
       if (error) throw error;
+
+      // Then delete the nail from user's inventory
+      const { error: deleteError } = await supabase
+        .from("user_nails")
+        .delete()
+        .eq("id", selectedNail.id);
+
+      if (deleteError) throw deleteError;
 
       const link = `${window.location.origin}/trade/${code}`;
       setTradeLink(link);

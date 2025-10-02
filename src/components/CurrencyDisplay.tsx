@@ -33,17 +33,19 @@ export const CurrencyDisplay = ({ soul, dreamPoints, masks, language, onUpdate }
   const { toast } = useToast();
 
   const handleResetDreamPoints = async () => {
+    if (dreamPoints <= 0) return;
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       await supabase
         .from("profiles")
-        .update({ dream_points: 0 })
+        .update({ dream_points: Math.max(0, dreamPoints - 1) })
         .eq("id", user.id);
 
       toast({ 
-        title: language === "ru" ? "Очки снов сброшены" : "Dream points reset" 
+        title: language === "ru" ? "Очко снов потеряно" : "Dream point lost" 
       });
       
       if (onUpdate) onUpdate();
