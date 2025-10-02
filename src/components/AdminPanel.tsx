@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Shield, Link as LinkIcon, Copy } from "lucide-react";
+import { Shield, Link as LinkIcon, Copy, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+const ADMIN_PASSWORD = "6767676767";
 
 interface AdminPanelProps {
   language: "en" | "ru";
@@ -27,6 +29,11 @@ const translations = {
     copyLink: "Copy Link",
     linkCopied: "Link copied to clipboard!",
     linkCreated: "Admin link created!",
+    enterPassword: "Enter Admin Password",
+    password: "Password",
+    unlock: "Unlock",
+    wrongPassword: "Wrong password",
+    accessDenied: "Access Denied",
   },
   ru: {
     admin: "Админ Панель",
@@ -43,10 +50,17 @@ const translations = {
     copyLink: "Копировать Ссылку",
     linkCopied: "Ссылка скопирована в буфер обмена!",
     linkCreated: "Админ ссылка создана!",
+    enterPassword: "Введите Пароль Админа",
+    password: "Пароль",
+    unlock: "Разблокировать",
+    wrongPassword: "Неверный пароль",
+    accessDenied: "Доступ Запрещен",
   },
 };
 
 export const AdminPanel = ({ language }: AdminPanelProps) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [soulAmount, setSoulAmount] = useState(100);
@@ -141,8 +155,50 @@ export const AdminPanel = ({ language }: AdminPanelProps) => {
     toast({ title: t.linkCopied });
   };
 
+  const handlePasswordSubmit = () => {
+    if (passwordInput === ADMIN_PASSWORD) {
+      setIsAuthenticated(true);
+      setPasswordInput("");
+    } else {
+      toast({
+        title: t.wrongPassword,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-10">{language === "ru" ? "Загрузка..." : "Loading..."}</div>;
+  }
+
+  // Password Check
+  if (!isAuthenticated) {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold text-primary">{t.admin}</h2>
+        <Card className="p-10 max-w-md mx-auto">
+          <div className="space-y-6 text-center">
+            <Lock className="h-16 w-16 mx-auto text-primary" />
+            <div className="space-y-2">
+              <h3 className="font-bold text-xl">{t.accessDenied}</h3>
+              <p className="text-sm text-muted-foreground">{t.enterPassword}</p>
+            </div>
+            <div className="space-y-4">
+              <Input
+                type="password"
+                placeholder={t.password}
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handlePasswordSubmit()}
+              />
+              <Button className="w-full" onClick={handlePasswordSubmit}>
+                {t.unlock}
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
   }
 
   if (!isAdmin) {
