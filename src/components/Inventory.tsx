@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Trash2, Gift, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import nailsSprite from "@/assets/nails-sprite.png";
 import { NailCard } from "./NailCard";
 import QRCode from "react-qr-code";
 import {
@@ -261,6 +262,16 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
                     {userNail.nails.rarity}
                   </Badge>
                   {userNail.is_dream && <Sparkles className="h-4 w-4 text-dream" />}
+                </div>
+                <div className="flex justify-center mb-3">
+                  <div 
+                    className="w-16 h-32 bg-contain bg-no-repeat bg-center"
+                    style={{
+                      backgroundImage: `url(${nailsSprite})`,
+                      backgroundPosition: `${((userNail.nails.order_index || 1) - 1) * -64}px 0px`,
+                      backgroundSize: `${64 * 5}px 128px`
+                    }}
+                  />
                 </div>
                 <h3 className="font-bold" style={{ color: `hsl(var(--${userNail.nails.rarity}))` }}>
                   {language === "ru" ? userNail.nails.name_ru : userNail.nails.name}

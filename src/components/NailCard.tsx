@@ -50,7 +50,7 @@ export const NailCard = ({ nail, isDream, language, onClick, className }: NailCa
             className="w-16 h-32 bg-contain bg-no-repeat bg-center"
             style={{
               backgroundImage: `url(${nailsSprite})`,
-              backgroundPosition: `${(nail.order_index || 0) * -64}px 0px`,
+              backgroundPosition: `${((nail.order_index || 1) - 1) * -64}px 0px`,
               backgroundSize: `${64 * 5}px 128px`
             }}
           />
