@@ -6,6 +6,7 @@ import { Package, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { NailCard } from "./NailCard";
+import { CaseScroll } from "./case/CaseScroll";
 
 interface CaseOpeningProps {
   language: "en" | "ru";
@@ -80,16 +81,28 @@ export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps)
       if (nailsError) throw nailsError;
 
       // Filter nails based on case type
-      const availableNails = caseType === "legendary" 
-        ? nails!.filter(n => n.order_index > 1)
-        : nails!;
+      const availableNails = (caseType === "legendary" 
+        ? nails!.filter((n: any) => n.order_index > 1)
+        : nails!) as any[];
+
+      // Weight function: earlier order_index => much higher chance; highest index is very rare
+      const weightFor = (n: any) => {
+        const idx = Math.max(1, Number(n.order_index) || 1);
+        // Exponential decay; index 1 ~ 100, 2 ~ 62, 3 ~ 39, 4 ~ 24, 5 ~ 15, 6 ~ 9 ...
+        return Math.max(1, Math.round(100 / Math.pow(1.6, idx - 1)));
+      };
+
+      const totalWeight = availableNails.reduce((sum, n) => sum + weightFor(n), 0);
+      let roll = Math.random() * totalWeight;
+      let selectedNail = availableNails[0];
+      for (const n of availableNails) {
+        roll -= weightFor(n);
+        if (roll <= 0) { selectedNail = n; break; }
+      }
 
       // Roll for Dream Nail (10% chance)
       const dreamRoll = Math.random() < 0.1;
       setIsDream(dreamRoll);
-
-      // Select random nail - THIS IS THE WINNING NAIL
-      const selectedNail = availableNails[Math.floor(Math.random() * availableNails.length)];
 
       // Generate scroll strip (50 items)
       const strip = [];
@@ -157,59 +170,9 @@ export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps)
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-primary">{t.cases}</h2>
 
-      {/* CS:GO Style Animation */}
+      {/* Case Opening Animation */}
       {isAnimating && scrollItems.length > 0 && (
-        <div className="relative w-full h-48 overflow-hidden rounded-lg border-2 border-primary bg-background/50 backdrop-blur">
-          {/* Central Selector */}
-          <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-primary z-20 shadow-[0_0_20px_rgba(var(--primary),0.8)]" />
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[20px] border-t-primary z-20" />
-          
-          {/* Scrolling Strip */}
-          <div 
-            className="absolute top-1/2 -translate-y-1/2 flex gap-4 px-4"
-            style={{
-              animation: 'case-scroll 5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards',
-              left: '100%'
-            }}
-          >
-            {scrollItems.map((item) => {
-              const isWinning = item.key === 'winning-item';
-              return (
-                <div
-                  key={item.key}
-                  className={`flex-shrink-0 w-32 h-40 rounded-lg p-2 flex flex-col items-center justify-center gap-2 relative overflow-hidden transition-all ${
-                    isWinning ? 'scale-110 z-10' : ''
-                  }`}
-                  style={{
-                    borderWidth: isWinning ? '3px' : '2px',
-                    borderStyle: 'solid',
-                    borderColor: `hsl(var(--${item.rarity}))`,
-                    backgroundColor: item.isDream 
-                      ? `hsl(var(--${item.rarity}) / 0.2)` 
-                      : `hsl(var(--${item.rarity}) / 0.1)`,
-                    boxShadow: isWinning 
-                      ? `0 0 30px hsl(var(--${item.rarity}) / 0.8)`
-                      : `0 0 20px hsl(var(--${item.rarity}) / 0.4)`
-                  }}
-                >
-                  <div 
-                    className="absolute inset-0 opacity-10"
-                    style={{ 
-                      background: `linear-gradient(135deg, hsl(var(--${item.rarity})) 0%, transparent 100%)` 
-                    }}
-                  />
-                  <span 
-                    className="text-xs font-bold text-center relative z-10" 
-                    style={{ color: `hsl(var(--${item.rarity}))` }}
-                  >
-                    {language === "ru" ? item.name_ru : item.name}
-                  </span>
-                  {item.isDream && <Sparkles className="h-4 w-4 text-dream relative z-10" />}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <CaseScroll items={scrollItems} winningKey="winning-item" language={language} durationMs={5000} />
       )}
 
       {openedNail && !isAnimating && (
