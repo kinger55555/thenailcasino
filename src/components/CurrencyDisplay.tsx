@@ -1,6 +1,7 @@
-import { Sparkles, Heart } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import maskImage from "@/assets/mask.webp";
+import soulIcon from "@/assets/soul-icon.png";
+import dreamIcon from "@/assets/dream-icon.png";
 
 interface CurrencyDisplayProps {
   soul: number;
@@ -30,7 +31,7 @@ export const CurrencyDisplay = ({ soul, dreamPoints, masks, language }: Currency
       <Card className="p-3 bg-card/50 backdrop-blur border-border/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-soul" />
+            <img src={soulIcon} alt="Soul" className="h-5 w-5" />
             <span className="text-sm text-muted-foreground">{t.soul}</span>
           </div>
           <span className="font-bold text-soul">{soul}</span>
@@ -40,7 +41,7 @@ export const CurrencyDisplay = ({ soul, dreamPoints, masks, language }: Currency
       <Card className="p-3 bg-card/50 backdrop-blur border-border/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-dream dream-glow" />
+            <img src={dreamIcon} alt="Dream Points" className="h-5 w-5" />
             <span className="text-sm text-muted-foreground">{t.dreamPoints}</span>
           </div>
           <span className="font-bold text-dream">{dreamPoints}</span>
