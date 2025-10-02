@@ -69,7 +69,7 @@ const Auth = () => {
 
     try {
       // Convert nickname to email format for auth
-      const email = `${nickname.toLowerCase()}@hollow.knight`;
+      const email = `${nickname.toLowerCase()}@hollowknight.game`;
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -96,7 +96,7 @@ const Auth = () => {
 
     try {
       // Convert nickname to email format for auth
-      const email = `${nickname.toLowerCase()}@hollow.knight`;
+      const email = `${nickname.toLowerCase()}@hollowknight.game`;
       const { error } = await supabase.auth.signUp({
         email,
         password,
