@@ -67,7 +67,6 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
   const [nails, setNails] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedNail, setSelectedNail] = useState<any>(null);
-  const [showSellDialog, setShowSellDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showTradeDialog, setShowTradeDialog] = useState(false);
   const [tradeLink, setTradeLink] = useState("");
@@ -105,21 +104,19 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
     }
   };
 
-  const handleSell = async () => {
-    if (!selectedNail) return;
-
+  const handleSell = async (userNail: any) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const nail = selectedNail.nails;
-      const sellValue = selectedNail.is_dream ? nail.dream_sell_value : nail.sell_value;
+      const nail = userNail.nails;
+      const sellValue = userNail.is_dream ? nail.dream_sell_value : nail.sell_value;
 
       // Delete nail from inventory
       const { error: deleteError } = await supabase
         .from("user_nails")
         .delete()
-        .eq("id", selectedNail.id);
+        .eq("id", userNail.id);
 
       if (deleteError) throw deleteError;
 
@@ -139,7 +136,6 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
         title: `${t.youWillGet} ${sellValue} ${language === "ru" ? "Души" : "Soul"}`,
       });
 
-      setShowSellDialog(false);
       loadInventory();
       onUpdate();
     } catch (error: any) {
@@ -248,10 +244,7 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
                   size="sm"
                   variant="outline"
                   className="flex-1"
-                  onClick={() => {
-                    setSelectedNail(userNail);
-                    setShowSellDialog(true);
-                  }}
+                  onClick={() => handleSell(userNail)}
                 >
                   {t.sellNail}
                 </Button>
@@ -280,33 +273,6 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
           ))}
         </div>
       )}
-
-      {/* Sell Dialog */}
-      <AlertDialog open={showSellDialog} onOpenChange={setShowSellDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t.confirmSell}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t.sellDescription}
-              {selectedNail && (
-                <div className="mt-4">
-                  <p className="font-bold">
-                    {t.youWillGet}:{" "}
-                    {selectedNail.is_dream
-                      ? selectedNail.nails.dream_sell_value
-                      : selectedNail.nails.sell_value}{" "}
-                    {language === "ru" ? "Монет" : "Coins"}
-                  </p>
-                </div>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleSell}>{t.confirmSell}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Delete Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
