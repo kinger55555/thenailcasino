@@ -101,7 +101,23 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
         .order("acquired_at", { ascending: false });
 
       if (error) throw error;
-      setNails(data || []);
+
+      const allNails = data || [];
+      if (allNails.length === 0) {
+        setNails([]);
+        return;
+      }
+
+      const ids = allNails.map((n: any) => n.id);
+      const { data: links, error: linksError } = await supabase
+        .from("trade_links")
+        .select("user_nail_id")
+        .in("user_nail_id", ids);
+      if (linksError) throw linksError;
+
+      const reserved = new Set((links || []).map((l: any) => l.user_nail_id));
+      const visible = allNails.filter((n: any) => !reserved.has(n.id));
+      setNails(visible);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -202,14 +218,6 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
         });
 
       if (error) throw error;
-
-      // Then delete the nail from user's inventory
-      const { error: deleteError } = await supabase
-        .from("user_nails")
-        .delete()
-        .eq("id", selectedNail.id);
-
-      if (deleteError) throw deleteError;
 
       const link = `${window.location.origin}/trade/${code}`;
       setTradeLink(link);
