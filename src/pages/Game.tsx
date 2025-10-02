@@ -6,6 +6,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogOut } from "lucide-react";
 import { CurrencyDisplay } from "@/components/CurrencyDisplay";
 import { CaseOpening } from "@/components/CaseOpening";
+import { Inventory } from "@/components/Inventory";
+import { Combat } from "@/components/Combat";
+import { Shop } from "@/components/Shop";
+import { AdminPanel } from "@/components/AdminPanel";
 import { useToast } from "@/hooks/use-toast";
 import dreamSymbol from "@/assets/dream-symbol.png";
 
@@ -171,27 +175,26 @@ const Game = () => {
           </TabsContent>
 
           <TabsContent value="inventory" className="mt-6">
-            <div className="text-center py-20 text-muted-foreground">
-              {language === "ru" ? "Инвентарь - В разработке" : "Inventory - Coming soon"}
-            </div>
+            <Inventory language={language} onUpdate={loadProfile} />
           </TabsContent>
 
           <TabsContent value="combat" className="mt-6">
-            <div className="text-center py-20 text-muted-foreground">
-              {language === "ru" ? "Бой - В разработке" : "Combat - Coming soon"}
-            </div>
+            <Combat language={language} onUpdate={loadProfile} />
           </TabsContent>
 
           <TabsContent value="shop" className="mt-6">
-            <div className="text-center py-20 text-muted-foreground">
-              {language === "ru" ? "Магазин - В разработке" : "Shop - Coming soon"}
-            </div>
+            <Shop
+              language={language}
+              soul={profile.soul}
+              dreamPoints={profile.dream_points}
+              coins={profile.coins}
+              masks={profile.masks}
+              onUpdate={loadProfile}
+            />
           </TabsContent>
 
           <TabsContent value="admin" className="mt-6">
-            <div className="text-center py-20 text-muted-foreground">
-              {language === "ru" ? "Админ панель - В разработке" : "Admin Panel - Coming soon"}
-            </div>
+            <AdminPanel language={language} />
           </TabsContent>
         </Tabs>
       </div>
