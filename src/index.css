@@ -135,7 +135,8 @@ All colors MUST be HSL.
       transform: translateX(0) translateY(-50%);
     }
     100% {
-      transform: translateX(calc(-100% + 50vw - 64px)) translateY(-50%);
+      /* Stop with item 52 centered: -(52 items * 144px per item) + 50vw - 64px */
+      transform: translateX(calc(-7488px + 50vw - 64px)) translateY(-50%);
     }
   }
 }

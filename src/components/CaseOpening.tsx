@@ -91,20 +91,26 @@ export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps)
       // Select random nail
       const selectedNail = availableNails[Math.floor(Math.random() * availableNails.length)];
 
-      // Generate scroll strip (50 items)
+      // Generate scroll strip (60 items)
       const strip = [];
-      for (let i = 0; i < 50; i++) {
+      for (let i = 0; i < 60; i++) {
         const randomNail = availableNails[Math.floor(Math.random() * availableNails.length)];
         const randomDream = Math.random() < 0.1;
         strip.push({ ...randomNail, isDream: randomDream, key: `item-${i}` });
       }
-      // Place winning item at position 45 (near the end)
-      strip[45] = { ...selectedNail, isDream: dreamRoll, key: 'winning-item' };
+      
+      // Place winning item at a calculated position
+      // The animation will stop with this item centered
+      const winningIndex = 52; // Position where animation stops
+      strip[winningIndex] = { ...selectedNail, isDream: dreamRoll, key: 'winning-item' };
       setScrollItems(strip);
+      setOpenedNail(selectedNail);
 
       // Start animation
       setIsAnimating(true);
       await new Promise(resolve => setTimeout(resolve, 5000));
+
+      setIsAnimating(false);
 
       // Get current profile
       const { data: { user } } = await supabase.auth.getUser();
@@ -129,7 +135,10 @@ export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps)
 
       if (insertError) throw insertError;
 
-      setOpenedNail(selectedNail);
+      // Don't show the nail card immediately
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      
       toast({
         title: `${t.youGot} ${language === "ru" ? selectedNail.name_ru : selectedNail.name}!`,
         description: dreamRoll ? t.dreamVersion : undefined,
