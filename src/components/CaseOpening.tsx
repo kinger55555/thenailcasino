@@ -51,6 +51,8 @@ export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps)
   const [opening, setOpening] = useState(false);
   const [openedNail, setOpenedNail] = useState<any>(null);
   const [isDream, setIsDream] = useState(false);
+  const [scrollItems, setScrollItems] = useState<any[]>([]);
+  const [isAnimating, setIsAnimating] = useState(false);
   const { toast } = useToast();
   const t = translations[language];
 
@@ -86,11 +88,29 @@ export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps)
       const dreamRoll = Math.random() < 0.1;
       setIsDream(dreamRoll);
 
-      // Select random nail
+      // Select random nail - THIS IS THE WINNING NAIL
       const selectedNail = availableNails[Math.floor(Math.random() * availableNails.length)];
 
-      // Simulate opening animation
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Generate scroll strip (50 items)
+      const strip = [];
+      for (let i = 0; i < 50; i++) {
+        if (i === 45) {
+          // Position 45 will be centered - place winning nail here
+          strip.push({ ...selectedNail, isDream: dreamRoll, key: 'winning-item' });
+        } else {
+          const randomNail = availableNails[Math.floor(Math.random() * availableNails.length)];
+          const randomDream = Math.random() < 0.1;
+          strip.push({ ...randomNail, isDream: randomDream, key: `item-${i}` });
+        }
+      }
+      
+      setScrollItems(strip);
+      setIsAnimating(true);
+
+      // Wait for animation
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      
+      setIsAnimating(false);
 
       // Get current profile
       const { data: { user } } = await supabase.auth.getUser();
@@ -104,7 +124,7 @@ export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps)
 
       if (updateError) throw updateError;
 
-      // Add nail to inventory
+      // Add nail to inventory - USE THE SELECTED NAIL (not from strip)
       const { error: insertError } = await supabase
         .from("user_nails")
         .insert({
@@ -137,7 +157,62 @@ export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps)
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-primary">{t.cases}</h2>
 
-      {openedNail && (
+      {/* CS:GO Style Animation */}
+      {isAnimating && scrollItems.length > 0 && (
+        <div className="relative w-full h-48 overflow-hidden rounded-lg border-2 border-primary bg-background/50 backdrop-blur">
+          {/* Central Selector */}
+          <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-primary z-20 shadow-[0_0_20px_rgba(var(--primary),0.8)]" />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[20px] border-t-primary z-20" />
+          
+          {/* Scrolling Strip */}
+          <div 
+            className="absolute top-1/2 -translate-y-1/2 flex gap-4 px-4"
+            style={{
+              animation: 'case-scroll 5s cubic-bezier(0.22, 0.61, 0.36, 1) forwards',
+              left: '100%'
+            }}
+          >
+            {scrollItems.map((item) => {
+              const isWinning = item.key === 'winning-item';
+              return (
+                <div
+                  key={item.key}
+                  className={`flex-shrink-0 w-32 h-40 rounded-lg p-2 flex flex-col items-center justify-center gap-2 relative overflow-hidden transition-all ${
+                    isWinning ? 'scale-110 z-10' : ''
+                  }`}
+                  style={{
+                    borderWidth: isWinning ? '3px' : '2px',
+                    borderStyle: 'solid',
+                    borderColor: `hsl(var(--${item.rarity}))`,
+                    backgroundColor: item.isDream 
+                      ? `hsl(var(--${item.rarity}) / 0.2)` 
+                      : `hsl(var(--${item.rarity}) / 0.1)`,
+                    boxShadow: isWinning 
+                      ? `0 0 30px hsl(var(--${item.rarity}) / 0.8)`
+                      : `0 0 20px hsl(var(--${item.rarity}) / 0.4)`
+                  }}
+                >
+                  <div 
+                    className="absolute inset-0 opacity-10"
+                    style={{ 
+                      background: `linear-gradient(135deg, hsl(var(--${item.rarity})) 0%, transparent 100%)` 
+                    }}
+                  />
+                  <span 
+                    className="text-xs font-bold text-center relative z-10" 
+                    style={{ color: `hsl(var(--${item.rarity}))` }}
+                  >
+                    {language === "ru" ? item.name_ru : item.name}
+                  </span>
+                  {item.isDream && <Sparkles className="h-4 w-4 text-dream relative z-10" />}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {openedNail && !isAnimating && (
         <div className="case-reveal space-y-4 animate-in fade-in zoom-in duration-500">
           <div className="text-center">
             <h3 className="text-2xl font-bold mb-4" style={{ color: `hsl(var(--${openedNail.rarity}))` }}>

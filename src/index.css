@@ -135,8 +135,7 @@ All colors MUST be HSL.
       transform: translateX(0) translateY(-50%);
     }
     100% {
-      /* Item width: 128px (w-32) + 16px gap = 144px per item
-         To center item 45: move -(45 * 144px) + (50vw - 64px for half item) */
+      /* Item 45 centered: -(45 * 144px) + 50vw - 64px */
       transform: translateX(calc(-6480px + 50vw - 64px)) translateY(-50%);
     }
   }

@@ -86,7 +86,7 @@ export const Combat = ({ language, onUpdate }: CombatProps) => {
 
     const interval = setInterval(() => {
       setTimingBar((prev) => {
-        const next = prev + timingDirection * 1.5; // Замедлил с 4 до 1.5
+        const next = prev + timingDirection * 2.75; // Средняя скорость между 4 и 1.5
         if (next >= 100 || next <= 0) {
           setTimingDirection((d) => -d);
         }
