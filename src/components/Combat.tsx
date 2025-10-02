@@ -86,7 +86,7 @@ export const Combat = ({ language, onUpdate }: CombatProps) => {
 
     const interval = setInterval(() => {
       setTimingBar((prev) => {
-        const next = prev + timingDirection * 2;
+        const next = prev + timingDirection * 4; // Faster (was 2)
         if (next >= 100 || next <= 0) {
           setTimingDirection((d) => -d);
         }
@@ -184,13 +184,13 @@ export const Combat = ({ language, onUpdate }: CombatProps) => {
     let damageMultiplier = 0.5; // Missed
     let hitQuality = t.missed;
 
-    // Perfect zone: 40-60 (green)
-    if (timingBar >= 40 && timingBar <= 60) {
-      damageMultiplier = 2.0;
+    // Perfect zone: 45-55 (green) - smaller zone
+    if (timingBar >= 45 && timingBar <= 55) {
+      damageMultiplier = 2.5;
       hitQuality = t.perfectHit;
     }
-    // Good zone: 30-70
-    else if (timingBar >= 30 && timingBar <= 70) {
+    // Good zone: 35-65
+    else if (timingBar >= 35 && timingBar <= 65) {
       damageMultiplier = 1.5;
       hitQuality = t.goodHit;
     }
@@ -347,9 +347,9 @@ export const Combat = ({ language, onUpdate }: CombatProps) => {
               {/* Red zones */}
               <div className="absolute inset-0 bg-danger/20" />
               {/* Yellow zones */}
-              <div className="absolute left-[30%] right-[30%] inset-y-0 bg-legendary/30" />
-              {/* Green zone (perfect) */}
-              <div className="absolute left-[40%] right-[40%] inset-y-0 bg-success/40" />
+              <div className="absolute left-[35%] right-[35%] inset-y-0 bg-legendary/30" />
+              {/* Green zone (perfect) - smaller */}
+              <div className="absolute left-[45%] right-[45%] inset-y-0 bg-success/40" />
               
               {/* Moving indicator */}
               <div

@@ -170,16 +170,30 @@ export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps)
             {scrollItems.map((item, idx) => (
               <div
                 key={item.key}
-                className="flex-shrink-0 w-32 h-40 rounded-lg border-2 p-2 flex flex-col items-center justify-center gap-2"
+                className="flex-shrink-0 w-32 h-40 rounded-lg p-2 flex flex-col items-center justify-center gap-2 relative overflow-hidden"
                 style={{
-                  borderColor: `var(--${item.rarity})`,
-                  backgroundColor: item.isDream ? 'rgba(var(--dream), 0.1)' : 'rgba(var(--background), 0.8)'
+                  borderWidth: '2px',
+                  borderStyle: 'solid',
+                  borderColor: `hsl(var(--${item.rarity}))`,
+                  backgroundColor: item.isDream 
+                    ? `hsl(var(--${item.rarity}) / 0.2)` 
+                    : `hsl(var(--${item.rarity}) / 0.1)`,
+                  boxShadow: `0 0 20px hsl(var(--${item.rarity}) / 0.4)`
                 }}
               >
-                <span className="text-xs font-bold text-center" style={{ color: `var(--${item.rarity})` }}>
+                <div 
+                  className="absolute inset-0 opacity-10"
+                  style={{ 
+                    background: `linear-gradient(135deg, hsl(var(--${item.rarity})) 0%, transparent 100%)` 
+                  }}
+                />
+                <span 
+                  className="text-xs font-bold text-center relative z-10" 
+                  style={{ color: `hsl(var(--${item.rarity}))` }}
+                >
                   {language === "ru" ? item.name_ru : item.name}
                 </span>
-                {item.isDream && <Sparkles className="h-4 w-4 text-dream" />}
+                {item.isDream && <Sparkles className="h-4 w-4 text-dream relative z-10" />}
               </div>
             ))}
           </div>
