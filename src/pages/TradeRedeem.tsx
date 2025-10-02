@@ -33,9 +33,17 @@ const TradeRedeem = () => {
 
       const { data, error: fetchError } = await supabase
         .from("trade_links")
-        .select("*")
+        .select(`
+          *,
+          user_nails!inner (
+            id,
+            nail_id,
+            is_dream,
+            nails (*)
+          )
+        `)
         .eq("code", code)
-        .single();
+        .maybeSingle();
 
       if (fetchError || !data) {
         setError("Trade link not found or expired");
@@ -134,7 +142,9 @@ const TradeRedeem = () => {
     );
   }
 
-  if (!tradeData) return null;
+  if (!tradeData || !tradeData.user_nails) return null;
+
+  const nail = tradeData.user_nails.nails;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -147,23 +157,49 @@ const TradeRedeem = () => {
           </p>
         </div>
 
-        <div className="text-sm text-muted-foreground">
-          <p>Code: {tradeData.code}</p>
+        <div className="space-y-4">
+          <div className="p-4 border border-border/50 rounded-lg space-y-3">
+            <div className="flex items-center justify-between">
+              <Badge style={{ backgroundColor: `hsl(var(--${nail.rarity}))` }}>
+                {nail.rarity}
+              </Badge>
+              {tradeData.user_nails.is_dream && (
+                <span className="text-xs text-dream flex items-center gap-1">
+                  <img src={dreamSymbol} alt="Dream" className="h-4 w-4 dream-glow" />
+                  Dream Variant
+                </span>
+              )}
+            </div>
+            
+            <h3 
+              className="text-xl font-bold" 
+              style={{ color: `hsl(var(--${nail.rarity}))` }}
+            >
+              {nail.name}
+            </h3>
+            
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p>Damage: {nail.base_damage}</p>
+              <p>
+                Value: {tradeData.user_nails.is_dream ? nail.dream_sell_value : nail.sell_value} Soul
+              </p>
+            </div>
+          </div>
+
+          <Button 
+            onClick={handleClaim} 
+            disabled={claiming}
+            className="w-full"
+            size="lg"
+          >
+            {claiming && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Claim Nail
+          </Button>
+
+          <p className="text-xs text-center text-muted-foreground">
+            By claiming this nail, it will be added to your inventory
+          </p>
         </div>
-
-        <Button 
-          onClick={handleClaim} 
-          disabled={claiming}
-          className="w-full"
-          size="lg"
-        >
-          {claiming && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Claim Nail
-        </Button>
-
-        <p className="text-xs text-center text-muted-foreground">
-          By claiming this nail, it will be added to your inventory
-        </p>
       </Card>
     </div>
   );

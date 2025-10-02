@@ -1,1 +1,4 @@
 project_id = "moukanvinxynnmzgqwtq"
+
+[functions.claim-trade]
+verify_jwt = true
