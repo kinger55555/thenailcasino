@@ -27,7 +27,7 @@ const translations = {
     dreamPoints: "Dream Points",
     insufficientFunds: "Insufficient funds",
     conversionSuccess: "Conversion successful!",
-    rate: "Exchange Rate: 1 Soul = 1 Dream Point",
+    rate: "Exchange Rate: 100 Soul = 1 Dream Point",
   },
   ru: {
     title: "Конвертер Валют",
@@ -39,7 +39,7 @@ const translations = {
     dreamPoints: "Очки Снов",
     insufficientFunds: "Недостаточно средств",
     conversionSuccess: "Конвертация успешна!",
-    rate: "Курс обмена: 1 Душа = 1 Очко Снов",
+    rate: "Курс обмена: 100 Души = 1 Очко Снов",
   },
 };
 
@@ -69,11 +69,21 @@ export const CurrencyConverter = ({ language, soul, dreamPoints, onUpdate }: Cur
           return;
         }
 
+        const dreamPointsToAdd = Math.floor(convertAmount / 100);
+        
+        if (dreamPointsToAdd === 0) {
+          toast({ 
+            title: language === "ru" ? "Минимум 100 души для обмена" : "Minimum 100 soul to convert",
+            variant: "destructive" 
+          });
+          return;
+        }
+
         await supabase
           .from("profiles")
           .update({
             soul: soul - convertAmount,
-            dream_points: dreamPoints + convertAmount,
+            dream_points: dreamPoints + dreamPointsToAdd,
           })
           .eq("id", user.id);
       } else {
@@ -86,7 +96,7 @@ export const CurrencyConverter = ({ language, soul, dreamPoints, onUpdate }: Cur
           .from("profiles")
           .update({
             dream_points: dreamPoints - convertAmount,
-            soul: soul + convertAmount,
+            soul: soul + (convertAmount * 100),
           })
           .eq("id", user.id);
       }
