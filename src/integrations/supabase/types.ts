@@ -14,16 +14,319 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_link_claims: {
+        Row: {
+          claimed_at: string | null
+          link_id: string
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          link_id: string
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string | null
+          link_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_link_claims_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "admin_links"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_link_claims_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_links: {
+        Row: {
+          code: string
+          created_at: string | null
+          created_by: string | null
+          dream_points_amount: number | null
+          id: string
+          soul_amount: number | null
+          uses_remaining: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          created_by?: string | null
+          dream_points_amount?: number | null
+          id?: string
+          soul_amount?: number | null
+          uses_remaining?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          created_by?: string | null
+          dream_points_amount?: number | null
+          id?: string
+          soul_amount?: number | null
+          uses_remaining?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_links_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      combat_history: {
+        Row: {
+          created_at: string | null
+          dream_points_gained: number | null
+          id: string
+          is_dream: boolean | null
+          nail_id: string | null
+          soul_gained: number | null
+          user_id: string | null
+          won: boolean
+        }
+        Insert: {
+          created_at?: string | null
+          dream_points_gained?: number | null
+          id?: string
+          is_dream?: boolean | null
+          nail_id?: string | null
+          soul_gained?: number | null
+          user_id?: string | null
+          won: boolean
+        }
+        Update: {
+          created_at?: string | null
+          dream_points_gained?: number | null
+          id?: string
+          is_dream?: boolean | null
+          nail_id?: string | null
+          soul_gained?: number | null
+          user_id?: string | null
+          won?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "combat_history_nail_id_fkey"
+            columns: ["nail_id"]
+            isOneToOne: false
+            referencedRelation: "nails"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "combat_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nails: {
+        Row: {
+          base_damage: number
+          created_at: string | null
+          dream_sell_value: number
+          id: string
+          name: string
+          name_ru: string
+          order_index: number
+          rarity: Database["public"]["Enums"]["nail_rarity"]
+          sell_value: number
+        }
+        Insert: {
+          base_damage: number
+          created_at?: string | null
+          dream_sell_value: number
+          id?: string
+          name: string
+          name_ru: string
+          order_index: number
+          rarity: Database["public"]["Enums"]["nail_rarity"]
+          sell_value: number
+        }
+        Update: {
+          base_damage?: number
+          created_at?: string | null
+          dream_sell_value?: number
+          id?: string
+          name?: string
+          name_ru?: string
+          order_index?: number
+          rarity?: Database["public"]["Enums"]["nail_rarity"]
+          sell_value?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          coins: number | null
+          created_at: string | null
+          dream_points: number | null
+          id: string
+          language: string | null
+          masks: number | null
+          nickname: string
+          soul: number | null
+        }
+        Insert: {
+          coins?: number | null
+          created_at?: string | null
+          dream_points?: number | null
+          id: string
+          language?: string | null
+          masks?: number | null
+          nickname: string
+          soul?: number | null
+        }
+        Update: {
+          coins?: number | null
+          created_at?: string | null
+          dream_points?: number | null
+          id?: string
+          language?: string | null
+          masks?: number | null
+          nickname?: string
+          soul?: number | null
+        }
+        Relationships: []
+      }
+      trade_links: {
+        Row: {
+          claimed_at: string | null
+          claimed_by: string | null
+          code: string
+          created_at: string | null
+          from_user_id: string | null
+          id: string
+          user_nail_id: string | null
+        }
+        Insert: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          code: string
+          created_at?: string | null
+          from_user_id?: string | null
+          id?: string
+          user_nail_id?: string | null
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          code?: string
+          created_at?: string | null
+          from_user_id?: string | null
+          id?: string
+          user_nail_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_links_claimed_by_fkey"
+            columns: ["claimed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_links_from_user_id_fkey"
+            columns: ["from_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_links_user_nail_id_fkey"
+            columns: ["user_nail_id"]
+            isOneToOne: false
+            referencedRelation: "user_nails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_nails: {
+        Row: {
+          acquired_at: string | null
+          id: string
+          is_dream: boolean | null
+          nail_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          acquired_at?: string | null
+          id?: string
+          is_dream?: boolean | null
+          nail_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          acquired_at?: string | null
+          id?: string
+          is_dream?: boolean | null
+          nail_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_nails_nail_id_fkey"
+            columns: ["nail_id"]
+            isOneToOne: false
+            referencedRelation: "nails"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_nails_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      nail_rarity: "common" | "uncommon" | "rare" | "epic" | "legendary"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +453,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      nail_rarity: ["common", "uncommon", "rare", "epic", "legendary"],
+    },
   },
 } as const
