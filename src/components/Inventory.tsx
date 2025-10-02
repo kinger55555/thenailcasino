@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Sparkles, Trash2, Gift } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { NailCard } from "./NailCard";
@@ -43,10 +42,6 @@ const translations = {
     copyLink: "Copy Link",
     close: "Close",
     linkCopied: "Link copied to clipboard!",
-    sellSelected: "Sell Selected",
-    selected: "Selected",
-    totalValue: "Total value",
-    sellMultipleDescription: "Are you sure you want to sell these nails?",
   },
   ru: {
     inventory: "Ваш Инвентарь",
@@ -65,10 +60,6 @@ const translations = {
     copyLink: "Копировать Ссылку",
     close: "Закрыть",
     linkCopied: "Ссылка скопирована в буфер обмена!",
-    sellSelected: "Продать Выбранные",
-    selected: "Выбрано",
-    totalValue: "Общая стоимость",
-    sellMultipleDescription: "Вы уверены, что хотите продать эти гвозди?",
   },
 };
 
@@ -76,9 +67,7 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
   const [nails, setNails] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedNail, setSelectedNail] = useState<any>(null);
-  const [selectedNails, setSelectedNails] = useState<Set<string>>(new Set());
   const [showSellDialog, setShowSellDialog] = useState(false);
-  const [showSellMultipleDialog, setShowSellMultipleDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showTradeDialog, setShowTradeDialog] = useState(false);
   const [tradeLink, setTradeLink] = useState("");
@@ -223,86 +212,13 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
     toast({ title: t.linkCopied });
   };
 
-  const toggleNailSelection = (nailId: string) => {
-    const newSelection = new Set(selectedNails);
-    if (newSelection.has(nailId)) {
-      newSelection.delete(nailId);
-    } else {
-      newSelection.add(nailId);
-    }
-    setSelectedNails(newSelection);
-  };
-
-  const calculateTotalValue = () => {
-    return nails
-      .filter((n) => selectedNails.has(n.id))
-      .reduce((sum, n) => {
-        const value = n.is_dream ? n.nails.dream_sell_value : n.nails.sell_value;
-        return sum + value;
-      }, 0);
-  };
-
-  const handleSellMultiple = async () => {
-    if (selectedNails.size === 0) return;
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const totalValue = calculateTotalValue();
-      const nailsToDelete = Array.from(selectedNails);
-
-      // Delete selected nails from inventory
-      const { error: deleteError } = await supabase
-        .from("user_nails")
-        .delete()
-        .in("id", nailsToDelete);
-
-      if (deleteError) throw deleteError;
-
-      // Get current profile and add soul
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("soul")
-        .eq("id", user.id)
-        .single();
-
-      await supabase
-        .from("profiles")
-        .update({ soul: (profile?.soul || 0) + totalValue })
-        .eq("id", user.id);
-
-      toast({
-        title: `${t.youWillGet} ${totalValue} ${language === "ru" ? "Души" : "Soul"}`,
-      });
-
-      setShowSellMultipleDialog(false);
-      setSelectedNails(new Set());
-      loadInventory();
-      onUpdate();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
   if (loading) {
     return <div className="text-center py-10">{language === "ru" ? "Загрузка..." : "Loading..."}</div>;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-primary">{t.inventory}</h2>
-        {selectedNails.size > 0 && (
-          <Button onClick={() => setShowSellMultipleDialog(true)} variant="default">
-            {t.sellSelected} ({selectedNails.size})
-          </Button>
-        )}
-      </div>
+      <h2 className="text-2xl font-bold text-primary">{t.inventory}</h2>
 
       {nails.length === 0 ? (
         <Card className="p-10 text-center text-muted-foreground">
@@ -311,14 +227,8 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {nails.map((userNail) => (
-            <Card key={userNail.id} className="p-4 space-y-3 border-border/50 relative">
-              <div className="absolute top-2 left-2 z-10">
-                <Checkbox
-                  checked={selectedNails.has(userNail.id)}
-                  onCheckedChange={() => toggleNailSelection(userNail.id)}
-                />
-              </div>
-              <div className="space-y-2 pt-4">
+            <Card key={userNail.id} className="p-4 space-y-3 border-border/50">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Badge style={{ backgroundColor: `hsl(var(--${userNail.nails.rarity}))` }}>
                     {userNail.nails.rarity}
@@ -408,30 +318,6 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
           <AlertDialogFooter>
             <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete}>{t.confirmDelete}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Sell Multiple Dialog */}
-      <AlertDialog open={showSellMultipleDialog} onOpenChange={setShowSellMultipleDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t.confirmSell}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t.sellMultipleDescription}
-              <div className="mt-4 space-y-2">
-                <p className="font-bold">
-                  {t.selected}: {selectedNails.size} {language === "ru" ? "гвоздей" : "nails"}
-                </p>
-                <p className="font-bold text-legendary">
-                  {t.totalValue}: {calculateTotalValue()} {language === "ru" ? "Души" : "Soul"}
-                </p>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleSellMultiple}>{t.confirmSell}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
