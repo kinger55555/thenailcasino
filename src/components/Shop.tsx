@@ -4,14 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Heart, Sparkles, Coins } from "lucide-react";
+import { Heart, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface ShopProps {
   language: "en" | "ru";
   soul: number;
   dreamPoints: number;
-  coins: number;
   masks: number;
   onUpdate: () => void;
 }
@@ -24,11 +23,6 @@ const translations = {
     buy: "Buy",
     notEnough: "Not enough",
     purchased: "Purchased!",
-    convertSoul: "Convert Soul to Coins",
-    convertDescription: "Exchange your Soul for Coins",
-    soulAmount: "Soul Amount",
-    convert: "Convert",
-    rate: "Rate",
     adminLinks: "Admin Links",
     enterCode: "Enter Admin Link Code",
     code: "Code",
@@ -44,11 +38,6 @@ const translations = {
     buy: "Купить",
     notEnough: "Недостаточно",
     purchased: "Куплено!",
-    convertSoul: "Конвертировать Душу в Монеты",
-    convertDescription: "Обменяйте Душу на Монеты",
-    soulAmount: "Количество Души",
-    convert: "Конвертировать",
-    rate: "Курс",
     adminLinks: "Админ Ссылки",
     enterCode: "Введите Код Админ Ссылки",
     code: "Код",
@@ -59,12 +48,10 @@ const translations = {
   },
 };
 
-const MASK_COST = 20; // coins per mask
-const SOUL_TO_COIN_RATE = 10; // 10 soul = 1 coin
+const MASK_COST = 20; // soul per mask
 
-export const Shop = ({ language, soul, dreamPoints, coins, masks, onUpdate }: ShopProps) => {
+export const Shop = ({ language, soul, dreamPoints, masks, onUpdate }: ShopProps) => {
   const [maskQuantity, setMaskQuantity] = useState(1);
-  const [soulToConvert, setSoulToConvert] = useState(0);
   const [adminCode, setAdminCode] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -73,9 +60,9 @@ export const Shop = ({ language, soul, dreamPoints, coins, masks, onUpdate }: Sh
   const buyMasks = async () => {
     const cost = MASK_COST * maskQuantity;
     
-    if (coins < cost) {
+    if (soul < cost) {
       toast({
-        title: `${t.notEnough} ${language === "ru" ? "монет" : "coins"}`,
+        title: `${t.notEnough} ${language === "ru" ? "души" : "soul"}`,
         variant: "destructive",
       });
       return;
@@ -89,60 +76,12 @@ export const Shop = ({ language, soul, dreamPoints, coins, masks, onUpdate }: Sh
       await supabase
         .from("profiles")
         .update({
-          coins: coins - cost,
+          soul: soul - cost,
           masks: masks + maskQuantity,
         })
         .eq("id", user.id);
 
       toast({ title: t.purchased });
-      onUpdate();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const convertSoul = async () => {
-    if (soulToConvert < SOUL_TO_COIN_RATE) {
-      toast({
-        title: `${t.notEnough} ${language === "ru" ? "души" : "soul"}`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (soul < soulToConvert) {
-      toast({
-        title: `${t.notEnough} ${language === "ru" ? "души" : "soul"}`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const coinsToAdd = Math.floor(soulToConvert / SOUL_TO_COIN_RATE);
-
-      await supabase
-        .from("profiles")
-        .update({
-          soul: soul - soulToConvert,
-          coins: coins + coinsToAdd,
-        })
-        .eq("id", user.id);
-
-      toast({
-        title: `${t.youGet} ${coinsToAdd} ${language === "ru" ? "монет" : "coins"}!`,
-      });
-      setSoulToConvert(0);
       onUpdate();
     } catch (error: any) {
       toast({
@@ -262,45 +201,11 @@ export const Shop = ({ language, soul, dreamPoints, coins, masks, onUpdate }: Sh
 
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">{language === "ru" ? "Цена" : "Cost"}:</span>
-            <span className="font-bold">{MASK_COST * maskQuantity} {language === "ru" ? "Монет" : "Coins"}</span>
+            <span className="font-bold">{MASK_COST * maskQuantity} {language === "ru" ? "Души" : "Soul"}</span>
           </div>
 
-          <Button className="w-full" onClick={buyMasks} disabled={loading || coins < MASK_COST * maskQuantity}>
+          <Button className="w-full" onClick={buyMasks} disabled={loading || soul < MASK_COST * maskQuantity}>
             {t.buy}
-          </Button>
-        </Card>
-
-        {/* Convert Soul */}
-        <Card className="p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <Coins className="h-6 w-6 text-legendary" />
-            <h3 className="font-bold text-xl">{t.convertSoul}</h3>
-          </div>
-          <p className="text-sm text-muted-foreground">{t.convertDescription}</p>
-          
-          <div className="space-y-2">
-            <Label>{t.soulAmount}</Label>
-            <Input
-              type="number"
-              min="0"
-              step={SOUL_TO_COIN_RATE}
-              value={soulToConvert}
-              onChange={(e) => setSoulToConvert(Math.max(0, parseInt(e.target.value) || 0))}
-            />
-          </div>
-
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">{t.rate}:</span>
-            <span className="font-bold">{SOUL_TO_COIN_RATE} Soul = 1 Coin</span>
-          </div>
-
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">{t.youGet}:</span>
-            <span className="font-bold">{Math.floor(soulToConvert / SOUL_TO_COIN_RATE)} Coins</span>
-          </div>
-
-          <Button className="w-full" onClick={convertSoul} disabled={loading || soulToConvert < SOUL_TO_COIN_RATE}>
-            {t.convert}
           </Button>
         </Card>
       </div>

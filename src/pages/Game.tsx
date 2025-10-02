@@ -150,7 +150,6 @@ const Game = () => {
         {/* Currency Display */}
         <CurrencyDisplay
           soul={profile.soul}
-          coins={profile.coins}
           dreamPoints={profile.dream_points}
           masks={profile.masks}
           language={language}
@@ -169,7 +168,7 @@ const Game = () => {
           <TabsContent value="cases" className="mt-6">
             <CaseOpening
               language={language}
-              coins={profile.coins}
+              soul={profile.soul}
               onOpenSuccess={loadProfile}
             />
           </TabsContent>
@@ -187,7 +186,6 @@ const Game = () => {
               language={language}
               soul={profile.soul}
               dreamPoints={profile.dream_points}
-              coins={profile.coins}
               masks={profile.masks}
               onUpdate={loadProfile}
             />

@@ -9,7 +9,7 @@ import { NailCard } from "./NailCard";
 
 interface CaseOpeningProps {
   language: "en" | "ru";
-  coins: number;
+  soul: number;
   onOpenSuccess: () => void;
 }
 
@@ -23,7 +23,7 @@ const translations = {
     dreamChance: "10% chance for Dream Nail",
     cost: "Cost",
     openCase: "Open Case",
-    notEnough: "Not enough coins",
+    notEnough: "Not enough soul",
     opening: "Opening...",
     youGot: "You got",
     dreamVersion: "Dream Version",
@@ -37,7 +37,7 @@ const translations = {
     dreamChance: "10% шанс Гвоздя Снов",
     cost: "Цена",
     openCase: "Открыть Кейс",
-    notEnough: "Недостаточно монет",
+    notEnough: "Недостаточно души",
     opening: "Открываем...",
     youGot: "Вы получили",
     dreamVersion: "Версия Снов",
@@ -47,7 +47,7 @@ const translations = {
 const BASIC_CASE_COST = 50;
 const LEGENDARY_CASE_COST = 150;
 
-export const CaseOpening = ({ language, coins, onOpenSuccess }: CaseOpeningProps) => {
+export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps) => {
   const [opening, setOpening] = useState(false);
   const [openedNail, setOpenedNail] = useState<any>(null);
   const [isDream, setIsDream] = useState(false);
@@ -59,7 +59,7 @@ export const CaseOpening = ({ language, coins, onOpenSuccess }: CaseOpeningProps
   const openCase = async (caseType: "basic" | "legendary") => {
     const cost = caseType === "basic" ? BASIC_CASE_COST : LEGENDARY_CASE_COST;
     
-    if (coins < cost) {
+    if (soul < cost) {
       toast({
         title: t.notEnough,
         variant: "destructive",
@@ -110,10 +110,10 @@ export const CaseOpening = ({ language, coins, onOpenSuccess }: CaseOpeningProps
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Deduct coins
+      // Deduct soul
       const { error: updateError } = await supabase
         .from("profiles")
-        .update({ coins: coins - cost })
+        .update({ soul: soul - cost })
         .eq("id", user.id);
 
       if (updateError) throw updateError;
@@ -207,12 +207,12 @@ export const CaseOpening = ({ language, coins, onOpenSuccess }: CaseOpeningProps
           </Badge>
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">{t.cost}:</span>
-            <span className="font-bold text-legendary">{BASIC_CASE_COST} {language === "ru" ? "Монет" : "Coins"}</span>
+            <span className="font-bold text-legendary">{BASIC_CASE_COST} {language === "ru" ? "Души" : "Soul"}</span>
           </div>
           <Button
             className="w-full"
             onClick={() => openCase("basic")}
-            disabled={opening || coins < BASIC_CASE_COST}
+            disabled={opening || soul < BASIC_CASE_COST}
           >
             {opening ? t.opening : t.openCase}
           </Button>
@@ -232,12 +232,12 @@ export const CaseOpening = ({ language, coins, onOpenSuccess }: CaseOpeningProps
           </Badge>
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">{t.cost}:</span>
-            <span className="font-bold text-legendary">{LEGENDARY_CASE_COST} {language === "ru" ? "Монет" : "Coins"}</span>
+            <span className="font-bold text-legendary">{LEGENDARY_CASE_COST} {language === "ru" ? "Души" : "Soul"}</span>
           </div>
           <Button
             className="w-full"
             onClick={() => openCase("legendary")}
-            disabled={opening || coins < LEGENDARY_CASE_COST}
+            disabled={opening || soul < LEGENDARY_CASE_COST}
           >
             {opening ? t.opening : t.openCase}
           </Button>

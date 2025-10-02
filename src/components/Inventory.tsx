@@ -123,20 +123,20 @@ export const Inventory = ({ language, onUpdate }: InventoryProps) => {
 
       if (deleteError) throw deleteError;
 
-      // Get current profile and add coins
+      // Get current profile and add soul
       const { data: profile } = await supabase
         .from("profiles")
-        .select("coins")
+        .select("soul")
         .eq("id", user.id)
         .single();
 
       await supabase
         .from("profiles")
-        .update({ coins: (profile?.coins || 0) + sellValue })
+        .update({ soul: (profile?.soul || 0) + sellValue })
         .eq("id", user.id);
 
       toast({
-        title: `${t.youWillGet} ${sellValue} ${language === "ru" ? "Монет" : "Coins"}`,
+        title: `${t.youWillGet} ${sellValue} ${language === "ru" ? "Души" : "Soul"}`,
       });
 
       setShowSellDialog(false);
