@@ -59,7 +59,7 @@ const locations: Location[] = [
       ru: "Каменные арки, полные эха шагов. Здесь всё кажется неподвижным, но где-то далеко слышны удары — будто чьи-то тренировки. Ты чувствуешь лёгкий зуд в пальцах — гвоздь хочет крови."
     },
     choices: [
-      { icon: "🌿", textEn: "Go to the green light", textRu: "Идти к зелёному свету", action: "combat", target: "greenpath", combatDifficulty: 2, soulReward: 10 },
+      { icon: "🌿", textEn: "Go to the green light", textRu: "Идти к зелёному свету", action: "navigate", target: "greenpath", requiresBoss: "false_knight" },
       { icon: "🕳", textEn: "Descend deeper", textRu: "Спуститься глубже", action: "combat", target: "crossroads", combatDifficulty: 3, soulReward: 15 },
       { icon: "⚒", textEn: "Pass through broken gates", textRu: "Пройти через разрушенные ворота", action: "boss", target: "arena_false", bossId: "false_knight", combatDifficulty: 3 }
     ]
@@ -84,7 +84,7 @@ const locations: Location[] = [
       ru: "Всё вокруг живое. Лозы двигаются от твоего дыхания, а вдалеке кто-то поёт — мелодия из листьев и ветра."
     },
     choices: [
-      { icon: "🌸", textEn: "Descend to the station", textRu: "Спуститься к станции", action: "combat", target: "queens_station", combatDifficulty: 2, soulReward: 12 },
+      { icon: "🌸", textEn: "Descend to the station", textRu: "Спуститься к станции", action: "navigate", target: "queens_station", requiresBoss: "hornet" },
       { icon: "🕸", textEn: "Make your way through the thickets", textRu: "Пробраться сквозь заросли", action: "boss", target: "trial_hornet", bossId: "hornet", combatDifficulty: 3 }
     ]
   },
@@ -267,6 +267,33 @@ const bossNames: Record<string, { en: string; ru: string }> = {
   soul_master: { en: "Soul Master", ru: "Мастер Душ" },
   broken_vessel: { en: "Broken Vessel", ru: "Разбитый Сосуд" },
   hollow_knight: { en: "Hollow Knight", ru: "Пустой Рыцарь" }
+};
+
+const bossStories: Record<string, { en: string; ru: string }> = {
+  false_knight: {
+    en: "The armored figure stands before you, heavy with the weight of false honor. Its movements are slow but devastating. The ground trembles with each step. This is not a knight — this is desperation wrapped in steel.",
+    ru: "Закованная в броню фигура стоит перед тобой, тяжёлая от веса ложной чести. Движения медленны, но разрушительны. Земля дрожит с каждым шагом. Это не рыцарь — это отчаяние, завёрнутое в сталь."
+  },
+  hornet: {
+    en: "She moves like silk through thorns. Her needle flashes in the dim light. 'Prove yourself worthy,' she says, her voice sharp as her blade. This is not just a battle — this is a test.",
+    ru: "Она двигается как шёлк сквозь шипы. Её игла сверкает в тусклом свете. 'Докажи, что достоин', — говорит она голосом, острым как клинок. Это не просто битва — это испытание."
+  },
+  mantis_lords: {
+    en: "Three silhouettes bow in perfect unison. Their movements are synchronized, a deadly dance honed over centuries. Respect must be earned through combat. They will not hold back.",
+    ru: "Три силуэта кланяются в идеальном унисоне. Их движения синхронны — смертельный танец, отточенный веками. Уважение нужно заслужить в бою. Они не будут сдерживаться."
+  },
+  soul_master: {
+    en: "The mage hovers above, drunk on stolen soul. His movements are erratic, unpredictable. Magic crackles in the air. He has forgotten what he once was, consumed by his own power.",
+    ru: "Маг парит наверху, опьянённый украденной душой. Его движения хаотичны, непредсказуемы. Магия потрескивает в воздухе. Он забыл, кем был когда-то, поглощённый собственной силой."
+  },
+  broken_vessel: {
+    en: "It stares at you with empty eyes. A hollow shell animated by infection. Every attack is a plea for release. This creature was once like you — a vessel, a sibling. Now it only knows pain.",
+    ru: "Он смотрит на тебя пустыми глазами. Полая оболочка, оживлённая инфекцией. Каждая атака — это мольба об избавлении. Это создание было когда-то как ты — сосуд, собрат. Теперь оно знает лишь боль."
+  },
+  hollow_knight: {
+    en: "The Hollow Knight stands motionless, sealed away to contain the infection. But the seal has weakened. Orange light leaks from the cracks in its armor. This is the end — one way or another.",
+    ru: "Пустой Рыцарь стоит неподвижно, запечатанный, чтобы сдержать инфекцию. Но печать ослабла. Оранжевый свет просачивается из трещин в броне. Это конец — так или иначе."
+  }
 };
 
 export const Story = ({ language, onUpdateProfile }: StoryProps) => {
@@ -599,11 +626,26 @@ export const Story = ({ language, onUpdateProfile }: StoryProps) => {
         </CardContent>
       </Card>
 
-      <Dialog open={combatOpen} onOpenChange={setCombatOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <Dialog open={combatOpen} onOpenChange={(open) => {
+        // Prevent closing if it's a boss battle
+        if (!open && currentChoice?.action === "boss") {
+          return;
+        }
+        setCombatOpen(open);
+      }}>
+        <DialogContent className="max-w-[95vw] w-full max-h-[95vh] h-full overflow-y-auto p-8">
           <DialogHeader>
-            <DialogTitle>{t.combat}</DialogTitle>
+            <DialogTitle className="text-2xl">
+              {currentChoice?.action === "boss" ? bossNames[currentChoice.bossId!]?.[language] : t.combat}
+            </DialogTitle>
           </DialogHeader>
+          {currentChoice?.action === "boss" && currentChoice.bossId && (
+            <div className="mb-6 p-6 bg-muted/50 rounded-lg border-2 border-primary/20">
+              <p className="text-lg leading-relaxed italic">
+                {bossStories[currentChoice.bossId][language]}
+              </p>
+            </div>
+          )}
           <Combat 
             language={language} 
             onUpdate={onUpdateProfile}
@@ -611,6 +653,7 @@ export const Story = ({ language, onUpdateProfile }: StoryProps) => {
             storyDifficulty={currentChoice?.combatDifficulty || 2}
             onStoryCombatComplete={handleCombatComplete}
             bossId={currentChoice?.bossId}
+            bossName={currentChoice?.bossId ? bossNames[currentChoice.bossId][language] : undefined}
             unlockedAbilities={progress.unlocked_abilities}
           />
         </DialogContent>

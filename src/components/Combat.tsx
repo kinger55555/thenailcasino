@@ -14,6 +14,7 @@ interface CombatProps {
   storyDifficulty?: number;
   onStoryCombatComplete?: (won: boolean) => void;
   bossId?: string;
+  bossName?: string;
   unlockedAbilities?: string[];
 }
 
@@ -93,7 +94,7 @@ const translations = {
   },
 };
 
-export const Combat = ({ language, onUpdate, storyMode = false, storyDifficulty = 2, onStoryCombatComplete, bossId, unlockedAbilities = [] }: CombatProps) => {
+export const Combat = ({ language, onUpdate, storyMode = false, storyDifficulty = 2, onStoryCombatComplete, bossId, bossName, unlockedAbilities = [] }: CombatProps) => {
   const [nails, setNails] = useState<any[]>([]);
   const [selectedNail, setSelectedNail] = useState<any>(null);
   const [difficulty, setDifficulty] = useState<DifficultyLevel>(storyMode ? (storyDifficulty as DifficultyLevel) : 2);
@@ -501,9 +502,9 @@ export const Combat = ({ language, onUpdate, storyMode = false, storyDifficulty 
           <Card className="p-6 space-y-4">
             <div className="flex items-center gap-2">
               <Swords className="h-5 w-5 text-primary" />
-              <span className="font-bold">{t.enemyHealth}</span>
+              <span className="font-bold">{bossName || t.enemyHealth}</span>
             </div>
-            <Progress value={enemyHealth} className="h-4" />
+            <Progress value={(enemyHealth / difficultySettings[difficulty].enemyHealth) * 100} className="h-4" />
             <p className="text-center text-2xl font-bold">{enemyHealth} HP</p>
           </Card>
         </div>
