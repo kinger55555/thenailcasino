@@ -202,6 +202,42 @@ export type Database = {
         }
         Relationships: []
       }
+      story_progress: {
+        Row: {
+          created_at: string | null
+          current_location: string
+          defeated_bosses: string[] | null
+          has_void_heart: boolean | null
+          id: string
+          unlocked_abilities: string[] | null
+          updated_at: string | null
+          user_id: string
+          visited_locations: string[] | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_location?: string
+          defeated_bosses?: string[] | null
+          has_void_heart?: boolean | null
+          id?: string
+          unlocked_abilities?: string[] | null
+          updated_at?: string | null
+          user_id: string
+          visited_locations?: string[] | null
+        }
+        Update: {
+          created_at?: string | null
+          current_location?: string
+          defeated_bosses?: string[] | null
+          has_void_heart?: boolean | null
+          id?: string
+          unlocked_abilities?: string[] | null
+          updated_at?: string | null
+          user_id?: string
+          visited_locations?: string[] | null
+        }
+        Relationships: []
+      }
       trade_links: {
         Row: {
           claimed_at: string | null
