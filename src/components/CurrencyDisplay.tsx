@@ -44,6 +44,12 @@ export const CurrencyDisplay = ({ soul, dreamPoints, masks, language, onUpdate }
         .update({ dream_points: Math.max(0, dreamPoints - 1) })
         .eq("id", user.id);
 
+      // Record deduction for admin stats
+      await supabase.from("dream_points_deductions").insert({
+        user_id: user.id,
+        amount: 1,
+      });
+
       toast({ 
         title: language === "ru" ? "Очко снов потеряно" : "Dream point lost" 
       });
