@@ -471,7 +471,14 @@ export const Story = ({ language, onUpdateProfile }: StoryProps) => {
 
       await supabase
         .from("story_progress")
-        .delete()
+        .update({
+          current_location: "awakening",
+          defeated_bosses: [],
+          unlocked_abilities: [],
+          visited_locations: ["awakening"],
+          has_void_heart: false,
+          updated_at: new Date().toISOString()
+        })
         .eq("user_id", user.id);
 
       toast({

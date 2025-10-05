@@ -317,9 +317,9 @@ export const Combat = ({ language, onUpdate, storyMode = false, storyDifficulty 
       enemyDamage = Math.floor(enemyDamage * 1.2); // Final boss hits harder
     }
 
-    // Dash ability: chance to dodge (15% chance)
+    // Dash ability: chance to dodge (25% chance)
     const hasDash = unlockedAbilities.includes("dash");
-    if (hasDash && Math.random() < 0.15) {
+    if (hasDash && Math.random() < 0.25) {
       toast({
         title: language === "ru" ? "Уворот!" : "Dodge!",
         description: language === "ru" ? "Вы увернулись от атаки!" : "You dodged the attack!",
@@ -327,14 +327,13 @@ export const Combat = ({ language, onUpdate, storyMode = false, storyDifficulty 
       enemyDamage = 0;
     }
 
-    // Wall Jump ability: avoid damage (20% damage reduction)
+    // Wall Jump ability: avoid damage (30% chance)
     const hasWallJump = unlockedAbilities.includes("wall_jump");
-    if (hasWallJump && enemyDamage > 0) {
-      const reducedAmount = Math.floor(enemyDamage * 0.2);
-      enemyDamage -= reducedAmount;
+    if (hasWallJump && enemyDamage > 0 && Math.random() < 0.3) {
+      enemyDamage = 0;
       toast({
         title: language === "ru" ? "Прыжок от стены!" : "Wall Jump!",
-        description: language === "ru" ? `Урон снижен на ${reducedAmount}` : `Damage reduced by ${reducedAmount}`,
+        description: language === "ru" ? "Вы полностью избежали урона!" : "You completely avoided damage!",
       });
     }
 
