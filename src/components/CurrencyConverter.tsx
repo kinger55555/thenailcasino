@@ -90,6 +90,12 @@ export const CurrencyConverter = ({ language, soul, dreamPoints, onUpdate }: Cur
           return;
         }
 
+        // Record deduction
+        await supabase.from("dream_points_deductions").insert({
+          user_id: user.id,
+          amount: numExchanges
+        });
+
         await supabase
           .from("profiles")
           .update({

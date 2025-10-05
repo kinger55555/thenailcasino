@@ -67,6 +67,7 @@ export const AdminPanel = ({ language }: AdminPanelProps) => {
   const [usesRemaining, setUsesRemaining] = useState<number | null>(null);
   const [links, setLinks] = useState<any[]>([]);
   const [totalClaims, setTotalClaims] = useState(0);
+  const [totalDeductions, setTotalDeductions] = useState(0);
   const { toast } = useToast();
   const t = translations[language];
 
@@ -74,6 +75,7 @@ export const AdminPanel = ({ language }: AdminPanelProps) => {
     if (isAuthenticated) {
       loadLinks();
       loadTotalClaims();
+      loadTotalDeductions();
     }
   }, [isAuthenticated]);
 
@@ -85,6 +87,19 @@ export const AdminPanel = ({ language }: AdminPanelProps) => {
 
       if (error) throw error;
       setTotalClaims(count || 0);
+    } catch (error: any) {
+      console.error(error);
+    }
+  };
+
+  const loadTotalDeductions = async () => {
+    try {
+      const { count, error } = await supabase
+        .from("dream_points_deductions")
+        .select("*", { count: 'exact', head: true });
+
+      if (error) throw error;
+      setTotalDeductions(count || 0);
     } catch (error: any) {
       console.error(error);
     }
@@ -190,18 +205,33 @@ export const AdminPanel = ({ language }: AdminPanelProps) => {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-primary">{t.admin}</h2>
 
-      {/* Total Claims Stats */}
-      <Card className="p-6 bg-primary/5">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">
-              {language === "ru" ? "Всего активаций админ-ссылок" : "Total Admin Link Claims"}
-            </p>
-            <p className="text-3xl font-bold text-primary">{totalClaims}</p>
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* Total Claims Stats */}
+        <Card className="p-6 bg-primary/5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">
+                {language === "ru" ? "Всего активаций админ-ссылок" : "Total Admin Link Claims"}
+              </p>
+              <p className="text-3xl font-bold text-primary">{totalClaims}</p>
+            </div>
+            <Shield className="h-12 w-12 text-primary opacity-50" />
           </div>
-          <Shield className="h-12 w-12 text-primary opacity-50" />
-        </div>
-      </Card>
+        </Card>
+
+        {/* Total Deductions Stats */}
+        <Card className="p-6 bg-destructive/5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">
+                {language === "ru" ? "Всего нажатий на минус" : "Total Dream Points Deductions"}
+              </p>
+              <p className="text-3xl font-bold text-destructive">{totalDeductions}</p>
+            </div>
+            <Shield className="h-12 w-12 text-destructive opacity-50" />
+          </div>
+        </Card>
+      </div>
 
       {/* Create Link */}
       <Card className="p-6 space-y-4">
