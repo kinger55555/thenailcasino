@@ -12,6 +12,7 @@ import { Shop } from "@/components/Shop";
 import { AdminPanel } from "@/components/AdminPanel";
 import { CurrencyConverter } from "@/components/CurrencyConverter";
 import { Rules } from "@/components/Rules";
+import { Story } from "@/components/Story";
 import { useToast } from "@/hooks/use-toast";
 import dreamSymbol from "@/assets/dream-symbol.png";
 
@@ -19,6 +20,7 @@ const translations = {
   en: {
     cases: "Cases",
     inventory: "Inventory",
+    story: "Story",
     combat: "Combat",
     shop: "Shop",
     rules: "Rules",
@@ -29,6 +31,7 @@ const translations = {
   ru: {
     cases: "Кейсы",
     inventory: "Инвентарь",
+    story: "История",
     combat: "Бой",
     shop: "Магазин",
     rules: "Правила",
@@ -170,9 +173,10 @@ const Game = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="cases" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="cases">{t.cases}</TabsTrigger>
             <TabsTrigger value="inventory">{t.inventory}</TabsTrigger>
+            <TabsTrigger value="story">{t.story}</TabsTrigger>
             <TabsTrigger value="combat">{t.combat}</TabsTrigger>
             <TabsTrigger value="shop">{t.shop}</TabsTrigger>
             <TabsTrigger value="rules">{t.rules}</TabsTrigger>
@@ -189,6 +193,10 @@ const Game = () => {
 
           <TabsContent value="inventory" className="mt-6">
             <Inventory language={language} onUpdate={loadProfile} />
+          </TabsContent>
+
+          <TabsContent value="story" className="mt-6">
+            <Story language={language} onUpdateProfile={loadProfile} />
           </TabsContent>
 
           <TabsContent value="combat" className="mt-6">
