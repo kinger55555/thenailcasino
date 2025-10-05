@@ -19,9 +19,12 @@ const translations = {
     cases: "Cases",
     basicCase: "Basic Case",
     legendaryCase: "Legendary Case",
+    dreamCase: "Dream Case",
     canDrop: "Can drop any Nail",
     canDropLegendary: "Can drop all except Old Nail",
+    canDropDream: "Can drop all except Old Nail (regular version only)",
     dreamChance: "10% chance for Dream Nail",
+    noDreamChance: "No Dream Nail - regular only",
     cost: "Cost",
     openCase: "Open Case",
     notEnough: "Not enough soul",
@@ -33,9 +36,12 @@ const translations = {
     cases: "Кейсы",
     basicCase: "Базовый Кейс",
     legendaryCase: "Легендарный Кейс",
+    dreamCase: "Кейс Снов",
     canDrop: "Может выпасть любой Гвоздь",
     canDropLegendary: "Может выпасть все кроме Старого Гвоздя",
+    canDropDream: "Может выпасть все кроме Старого Гвоздя (только обычная версия)",
     dreamChance: "10% шанс Гвоздя Снов",
+    noDreamChance: "Без Гвоздя Снов - только обычные",
     cost: "Цена",
     openCase: "Открыть Кейс",
     notEnough: "Недостаточно души",
@@ -47,6 +53,7 @@ const translations = {
 
 const BASIC_CASE_COST = 100;
 const LEGENDARY_CASE_COST = 300;
+const DREAM_CASE_COST = 500;
 
 export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps) => {
   const [opening, setOpening] = useState(false);
@@ -57,8 +64,10 @@ export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps)
   const { toast } = useToast();
   const t = translations[language];
 
-  const openCase = async (caseType: "basic" | "legendary") => {
-    const cost = caseType === "basic" ? BASIC_CASE_COST : LEGENDARY_CASE_COST;
+  const openCase = async (caseType: "basic" | "legendary" | "dream") => {
+    const cost = caseType === "basic" ? BASIC_CASE_COST : 
+                 caseType === "legendary" ? LEGENDARY_CASE_COST : 
+                 DREAM_CASE_COST;
     
     if (soul < cost) {
       toast({
@@ -81,7 +90,7 @@ export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps)
       if (nailsError) throw nailsError;
 
       // Filter nails based on case type
-      const availableNails = (caseType === "legendary" 
+      const availableNails = (caseType === "legendary" || caseType === "dream"
         ? nails!.filter((n: any) => n.order_index > 1)
         : nails!) as any[];
 
@@ -100,8 +109,8 @@ export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps)
         if (roll <= 0) { selectedNail = n; break; }
       }
 
-      // Roll for Dream Nail (10% chance)
-      const dreamRoll = Math.random() < 0.1;
+      // Roll for Dream Nail (10% chance for basic/legendary, 0% for dream case)
+      const dreamRoll = caseType === "dream" ? false : Math.random() < 0.1;
       setIsDream(dreamRoll);
 
       // Generate scroll strip (50 items)
@@ -194,7 +203,7 @@ export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps)
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-3 gap-4">
         <Card className="p-6 space-y-4 border-border/50">
           <div className="flex items-center gap-3">
             <Package className="h-8 w-8 text-common" />
@@ -240,6 +249,30 @@ export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps)
             className="w-full"
             onClick={() => openCase("legendary")}
             disabled={opening || soul < LEGENDARY_CASE_COST}
+          >
+            {opening ? t.opening : t.openCase}
+          </Button>
+        </Card>
+
+        <Card className="p-6 space-y-4 border-dream">
+          <div className="flex items-center gap-3">
+            <Package className="h-8 w-8 text-dream" />
+            <div>
+              <h3 className="font-bold text-xl text-dream">{t.dreamCase}</h3>
+              <p className="text-sm text-muted-foreground">{t.canDropDream}</p>
+            </div>
+          </div>
+          <Badge variant="outline" className="text-muted-foreground">
+            {t.noDreamChance}
+          </Badge>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">{t.cost}:</span>
+            <span className="font-bold text-dream">{DREAM_CASE_COST} {language === "ru" ? "Души" : "Soul"}</span>
+          </div>
+          <Button
+            className="w-full"
+            onClick={() => openCase("dream")}
+            disabled={opening || soul < DREAM_CASE_COST}
           >
             {opening ? t.opening : t.openCase}
           </Button>
