@@ -120,7 +120,7 @@ const locations: Location[] = [
       ru: "Воздух сладкий, будто сон. Ты идёшь по мягкой почве, слыша хлопки спор."
     },
     choices: [
-      { icon: "⚒", textEn: "Enter the spore temple", textRu: "Войти в храм спор", action: "boss", target: "mantis_arena", bossId: "mantis_lords", combatDifficulty: 4 },
+      { icon: "⚒", textEn: "Enter the spore temple", textRu: "Войти в храм спор", action: "boss", target: "mantis_arena", bossId: "mantis_lords", combatDifficulty: 4, requiresBoss: "hornet" },
       { icon: "💧", textEn: "Open the lift to City of Tears", textRu: "Открыть лифт в Город Слёз", action: "combat", target: "city_tears", combatDifficulty: 4, soulReward: 15 }
     ]
   },
@@ -460,13 +460,51 @@ export const Story = ({ language, onUpdateProfile }: StoryProps) => {
   const currentLocation = locations.find(loc => loc.id === progress.current_location);
   if (!currentLocation) return null;
 
+  const handleResetStory = async () => {
+    if (!confirm(language === "en" ? "Are you sure you want to reset your story progress? This cannot be undone!" : "Вы уверены, что хотите сбросить прогресс истории? Это действие нельзя отменить!")) {
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase
+        .from("story_progress")
+        .delete()
+        .eq("user_id", user.id);
+
+      toast({
+        title: language === "en" ? "Story Reset" : "История сброшена",
+        description: language === "en" ? "Your story progress has been reset" : "Ваш прогресс истории был сброшен"
+      });
+
+      loadProgress();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Scroll className="w-5 h-5" />
-            {t.title}
+          <CardTitle className="flex items-center gap-2 justify-between">
+            <div className="flex items-center gap-2">
+              <Scroll className="w-5 h-5" />
+              {t.title}
+            </div>
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={handleResetStory}
+            >
+              {language === "en" ? "Reset Story" : "Сбросить историю"}
+            </Button>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -565,6 +603,8 @@ export const Story = ({ language, onUpdateProfile }: StoryProps) => {
             storyMode={true}
             storyDifficulty={currentChoice?.combatDifficulty || 2}
             onStoryCombatComplete={handleCombatComplete}
+            bossId={currentChoice?.bossId}
+            unlockedAbilities={progress.unlocked_abilities}
           />
         </DialogContent>
       </Dialog>

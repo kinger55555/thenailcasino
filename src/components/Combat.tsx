@@ -13,6 +13,8 @@ interface CombatProps {
   storyMode?: boolean;
   storyDifficulty?: number;
   onStoryCombatComplete?: (won: boolean) => void;
+  bossId?: string;
+  unlockedAbilities?: string[];
 }
 
 type DifficultyLevel = 1 | 2 | 3 | 4 | 5;
@@ -91,7 +93,7 @@ const translations = {
   },
 };
 
-export const Combat = ({ language, onUpdate, storyMode = false, storyDifficulty = 2, onStoryCombatComplete }: CombatProps) => {
+export const Combat = ({ language, onUpdate, storyMode = false, storyDifficulty = 2, onStoryCombatComplete, bossId, unlockedAbilities = [] }: CombatProps) => {
   const [nails, setNails] = useState<any[]>([]);
   const [selectedNail, setSelectedNail] = useState<any>(null);
   const [difficulty, setDifficulty] = useState<DifficultyLevel>(storyMode ? (storyDifficulty as DifficultyLevel) : 2);
@@ -103,6 +105,7 @@ export const Combat = ({ language, onUpdate, storyMode = false, storyDifficulty 
   const [timingBar, setTimingBar] = useState(0);
   const [isTimingActive, setIsTimingActive] = useState(false);
   const [timingDirection, setTimingDirection] = useState(1);
+  const [hasUsedDeathSave, setHasUsedDeathSave] = useState(false);
   const { toast } = useToast();
   const t = translations[language];
 
@@ -196,6 +199,7 @@ export const Combat = ({ language, onUpdate, storyMode = false, storyDifficulty 
       setIsTimingActive(true);
       setTimingBar(0);
       setTimingDirection(1);
+      setHasUsedDeathSave(false); // Reset death save for new battle
       onUpdate();
     } catch (error: any) {
       toast({
@@ -216,8 +220,14 @@ export const Combat = ({ language, onUpdate, storyMode = false, storyDifficulty 
     let hitQuality = t.missed;
     let isPerfectHit = false;
 
-    // Perfect zone: 45-55 (green) - smaller zone
-    if (timingBar >= 45 && timingBar <= 55) {
+    // Thread ability: slows time (bigger perfect zone)
+    const hasThread = unlockedAbilities.includes("thread");
+    const perfectZoneSize = hasThread ? 15 : 10; // 45-60 instead of 45-55
+    const perfectZoneStart = 45;
+    const perfectZoneEnd = perfectZoneStart + perfectZoneSize;
+
+    // Perfect zone: 45-55 (or 45-60 with thread)
+    if (timingBar >= perfectZoneStart && timingBar <= perfectZoneEnd) {
       damageMultiplier = 2.5;
       hitQuality = t.perfectHit;
       isPerfectHit = true;
@@ -229,14 +239,37 @@ export const Combat = ({ language, onUpdate, storyMode = false, storyDifficulty 
     }
 
     const diffStats = difficultySettings[difficulty];
-    const playerDamage = Math.floor(
+    let playerDamage = Math.floor(
       (selectedNail.nails.base_damage + Math.floor(Math.random() * 10)) * damageMultiplier
     );
-    const enemyDamage = diffStats.enemyDamage + Math.floor(Math.random() * 8);
+
+    // Boss-specific mechanics
+    let bossMessage = "";
+    if (bossId === "false_knight") {
+      // Heavy armor - reduces damage by 30%
+      playerDamage = Math.floor(playerDamage * 0.7);
+      bossMessage = language === "ru" ? "Тяжелая броня!" : "Heavy armor!";
+    } else if (bossId === "hornet") {
+      // Fast and precise - if player misses, takes extra damage
+      if (damageMultiplier === 0.5) {
+        bossMessage = language === "ru" ? "Хорнет контратакует!" : "Hornet counterattacks!";
+      }
+    } else if (bossId === "mantis_lords") {
+      // Three lords - attacks 3 times, but each weaker
+      bossMessage = language === "ru" ? "Три силуэта атакуют!" : "Three silhouettes attack!";
+    } else if (bossId === "soul_master") {
+      // Magic - random teleport makes timing harder
+      if (Math.random() > 0.7) {
+        bossMessage = language === "ru" ? "Мастер телепортировался!" : "Master teleported!";
+      }
+    } else if (bossId === "hollow_knight") {
+      // Final boss - more aggressive
+      bossMessage = language === "ru" ? "Финальный босс!" : "Final boss!";
+    }
 
     toast({
       title: hitQuality,
-      description: `${playerDamage} ${language === "ru" ? "урона" : "damage"}`,
+      description: `${playerDamage} ${language === "ru" ? "урона" : "damage"}${bossMessage ? ` - ${bossMessage}` : ""}`,
     });
 
     await new Promise((resolve) => setTimeout(resolve, 300));
@@ -271,8 +304,73 @@ export const Combat = ({ language, onUpdate, storyMode = false, storyDifficulty 
       return;
     }
 
+    // Calculate enemy damage
+    let enemyDamage = diffStats.enemyDamage + Math.floor(Math.random() * 8);
+
+    // Boss-specific damage modifications
+    if (bossId === "hornet" && damageMultiplier === 0.5) {
+      enemyDamage = Math.floor(enemyDamage * 1.5); // Hornet counterattack
+    } else if (bossId === "mantis_lords") {
+      // Mantis Lords attack 3 times but each weaker
+      enemyDamage = Math.floor(enemyDamage * 0.4 * 3);
+    } else if (bossId === "hollow_knight") {
+      enemyDamage = Math.floor(enemyDamage * 1.2); // Final boss hits harder
+    }
+
+    // Dash ability: chance to dodge (15% chance)
+    const hasDash = unlockedAbilities.includes("dash");
+    if (hasDash && Math.random() < 0.15) {
+      toast({
+        title: language === "ru" ? "Уворот!" : "Dodge!",
+        description: language === "ru" ? "Вы увернулись от атаки!" : "You dodged the attack!",
+      });
+      enemyDamage = 0;
+    }
+
+    // Wall Jump ability: avoid damage (20% damage reduction)
+    const hasWallJump = unlockedAbilities.includes("wall_jump");
+    if (hasWallJump && enemyDamage > 0) {
+      const reducedAmount = Math.floor(enemyDamage * 0.2);
+      enemyDamage -= reducedAmount;
+      toast({
+        title: language === "ru" ? "Прыжок от стены!" : "Wall Jump!",
+        description: language === "ru" ? `Урон снижен на ${reducedAmount}` : `Damage reduced by ${reducedAmount}`,
+      });
+    }
+
+    // Vengeful Spirit ability: reflect damage (25% of damage taken)
+    const hasVengefulSpirit = unlockedAbilities.includes("vengeful_spirit");
+    if (hasVengefulSpirit && enemyDamage > 0) {
+      const reflectedDamage = Math.floor(enemyDamage * 0.25);
+      const newEnemyHealthAfterReflect = Math.max(0, enemyHealth - reflectedDamage);
+      setEnemyHealth(newEnemyHealthAfterReflect);
+      toast({
+        title: language === "ru" ? "Мстительный дух!" : "Vengeful Spirit!",
+        description: language === "ru" ? `Отражено ${reflectedDamage} урона` : `Reflected ${reflectedDamage} damage`,
+      });
+
+      // Check if enemy died from reflection
+      if (newEnemyHealthAfterReflect <= 0) {
+        await handleVictory();
+        setBattling(false);
+        return;
+      }
+    }
+
     // Enemy attacks (only if not perfect hit)
-    const newPlayerHealth = Math.max(0, playerHealth - enemyDamage);
+    let newPlayerHealth = Math.max(0, playerHealth - enemyDamage);
+    
+    // Double Jump ability: death save (once per battle)
+    const hasDoubleJump = unlockedAbilities.includes("double_jump");
+    if (newPlayerHealth <= 0 && hasDoubleJump && !hasUsedDeathSave) {
+      newPlayerHealth = 30; // Save with 30 HP
+      setHasUsedDeathSave(true);
+      toast({
+        title: language === "ru" ? "Двойной прыжок!" : "Double Jump!",
+        description: language === "ru" ? "Вы спаслись от смерти!" : "You saved yourself from death!",
+      });
+    }
+
     setPlayerHealth(newPlayerHealth);
 
     await new Promise((resolve) => setTimeout(resolve, 500));
