@@ -22,9 +22,9 @@ const translations = {
     dreamCase: "Dream Case",
     canDrop: "Can drop any Nail",
     canDropLegendary: "Can drop all except Old Nail",
-    canDropDream: "Can drop all except Old Nail (regular version only)",
+    canDropDream: "Can drop all except Old Nail (Dream versions only!)",
     dreamChance: "10% chance for Dream Nail",
-    noDreamChance: "No Dream Nail - regular only",
+    allDreamChance: "100% Dream Nail - only Dream versions!",
     cost: "Cost",
     openCase: "Open Case",
     notEnough: "Not enough soul",
@@ -39,9 +39,9 @@ const translations = {
     dreamCase: "Кейс Снов",
     canDrop: "Может выпасть любой Гвоздь",
     canDropLegendary: "Может выпасть все кроме Старого Гвоздя",
-    canDropDream: "Может выпасть все кроме Старого Гвоздя (только обычная версия)",
+    canDropDream: "Может выпасть все кроме Старого Гвоздя (только версии Снов!)",
     dreamChance: "10% шанс Гвоздя Снов",
-    noDreamChance: "Без Гвоздя Снов - только обычные",
+    allDreamChance: "100% Гвоздь Снов - только версии Снов!",
     cost: "Цена",
     openCase: "Открыть Кейс",
     notEnough: "Недостаточно души",
@@ -109,8 +109,8 @@ export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps)
         if (roll <= 0) { selectedNail = n; break; }
       }
 
-      // Roll for Dream Nail (10% chance for basic/legendary, 0% for dream case)
-      const dreamRoll = caseType === "dream" ? false : Math.random() < 0.1;
+      // Roll for Dream Nail (10% chance for basic/legendary, 100% for dream case)
+      const dreamRoll = caseType === "dream" ? true : Math.random() < 0.1;
       setIsDream(dreamRoll);
 
       // Generate scroll strip (50 items)
@@ -262,8 +262,9 @@ export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps)
               <p className="text-sm text-muted-foreground">{t.canDropDream}</p>
             </div>
           </div>
-          <Badge variant="outline" className="text-muted-foreground">
-            {t.noDreamChance}
+          <Badge variant="outline" className="text-dream">
+            <Sparkles className="h-3 w-3 mr-1" />
+            {t.allDreamChance}
           </Badge>
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">{t.cost}:</span>
