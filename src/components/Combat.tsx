@@ -10,6 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 interface CombatProps {
   language: "en" | "ru";
   onUpdate: () => void;
+  storyMode?: boolean;
+  storyDifficulty?: number;
+  onStoryCombatComplete?: (won: boolean) => void;
 }
 
 type DifficultyLevel = 1 | 2 | 3 | 4 | 5;
@@ -88,10 +91,10 @@ const translations = {
   },
 };
 
-export const Combat = ({ language, onUpdate }: CombatProps) => {
+export const Combat = ({ language, onUpdate, storyMode = false, storyDifficulty = 2, onStoryCombatComplete }: CombatProps) => {
   const [nails, setNails] = useState<any[]>([]);
   const [selectedNail, setSelectedNail] = useState<any>(null);
-  const [difficulty, setDifficulty] = useState<DifficultyLevel>(2);
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>(storyMode ? (storyDifficulty as DifficultyLevel) : 2);
   const [inBattle, setInBattle] = useState(false);
   const [isDreamBattle, setIsDreamBattle] = useState(false);
   const [playerHealth, setPlayerHealth] = useState(100);
@@ -331,6 +334,11 @@ export const Combat = ({ language, onUpdate }: CombatProps) => {
 
       setInBattle(false);
       onUpdate();
+
+      // If in story mode, call the callback
+      if (storyMode && onStoryCombatComplete) {
+        onStoryCombatComplete(true);
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -345,6 +353,7 @@ export const Combat = ({ language, onUpdate }: CombatProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Record combat history
       await supabase.from("combat_history").insert({
         user_id: user.id,
         nail_id: selectedNail.nail_id,
@@ -360,6 +369,12 @@ export const Combat = ({ language, onUpdate }: CombatProps) => {
       });
 
       setInBattle(false);
+      onUpdate();
+
+      // If in story mode, call the callback
+      if (storyMode && onStoryCombatComplete) {
+        onStoryCombatComplete(false);
+      }
     } catch (error: any) {
       toast({
         title: "Error",

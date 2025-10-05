@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Scroll, Swords, MapPin } from "lucide-react";
+import { Combat } from "@/components/Combat";
 
 interface StoryProps {
   language: "en" | "ru";
@@ -20,7 +22,8 @@ interface StoryProgress {
 
 interface LocationChoice {
   icon: string;
-  text: string;
+  textEn: string;
+  textRu: string;
   action: "navigate" | "combat" | "boss";
   target?: string;
   combatDifficulty?: number;
@@ -45,173 +48,173 @@ const locations: Location[] = [
       ru: "Ты просыпаешься в пещере, где камни шепчут. Тело дрожит, а в руке — гвоздь, покрытый пылью. Каждое эхо в темноте зовёт тебя глубже."
     },
     choices: [
-      { icon: "⚔️", text: "Enter Forgotten Crossroads", action: "navigate", target: "crossroads" }
+      { icon: "⚔️", textEn: "Enter Forgotten Crossroads", textRu: "Войти в Забытые Перекрестки", action: "navigate", target: "crossroads" }
     ]
   },
   {
     id: "crossroads",
-    title: { en: "Forgotten Crossroads", ru: "Forgotten Crossroads" },
+    title: { en: "Forgotten Crossroads", ru: "Забытые Перекрестки" },
     description: {
       en: "Stone arches, full of echoing footsteps. Everything seems motionless, but somewhere far away you hear strikes — like someone's training. You feel a slight itch in your fingers — the nail wants blood.",
       ru: "Каменные арки, полные эха шагов. Здесь всё кажется неподвижным, но где-то далеко слышны удары — будто чьи-то тренировки. Ты чувствуешь лёгкий зуд в пальцах — гвоздь хочет крови."
     },
     choices: [
-      { icon: "🌿", text: "Go to the green light (Greenpath)", action: "combat", target: "greenpath", combatDifficulty: 2, soulReward: 10 },
-      { icon: "🕳", text: "Descend deeper (Depths)", action: "combat", target: "crossroads", combatDifficulty: 3, soulReward: 15 },
-      { icon: "⚒", text: "Pass through broken gates (Arena of the False)", action: "boss", target: "arena_false", bossId: "false_knight" }
+      { icon: "🌿", textEn: "Go to the green light", textRu: "Идти к зелёному свету", action: "combat", target: "greenpath", combatDifficulty: 2, soulReward: 10 },
+      { icon: "🕳", textEn: "Descend deeper", textRu: "Спуститься глубже", action: "combat", target: "crossroads", combatDifficulty: 3, soulReward: 15 },
+      { icon: "⚒", textEn: "Pass through broken gates", textRu: "Пройти через разрушенные ворота", action: "boss", target: "arena_false", bossId: "false_knight", combatDifficulty: 3 }
     ]
   },
   {
     id: "arena_false",
-    title: { en: "Arena of the False", ru: "Arena of the False" },
+    title: { en: "Arena of the False", ru: "Арена Ложного" },
     description: {
       en: "Under a dome of stone you hear footsteps. The armor comes to life, as if inside it — the rumble of the earth itself.",
       ru: "Под куполом из камня ты слышишь шаги. Доспех оживает, будто внутри него — гул самой земли."
     },
     choices: [
-      { icon: "⬅", text: "Return to Crossroads", action: "navigate", target: "crossroads" },
-      { icon: "🌿", text: "To Greenpath", action: "navigate", target: "greenpath" }
+      { icon: "⬅", textEn: "Return to Crossroads", textRu: "Вернуться в Перекрестки", action: "navigate", target: "crossroads" },
+      { icon: "🌿", textEn: "To Greenpath", textRu: "В Зеленый Путь", action: "navigate", target: "greenpath" }
     ]
   },
   {
     id: "greenpath",
-    title: { en: "Greenpath", ru: "Greenpath" },
+    title: { en: "Greenpath", ru: "Зеленый Путь" },
     description: {
       en: "Everything around is alive. Vines move from your breath, and in the distance someone sings — a melody of leaves and wind.",
       ru: "Всё вокруг живое. Лозы двигаются от твоего дыхания, а вдалеке кто-то поёт — мелодия из листьев и ветра."
     },
     choices: [
-      { icon: "🌸", text: "Descend to the station (Queen's Station)", action: "combat", target: "queens_station", combatDifficulty: 2, soulReward: 12 },
-      { icon: "🕸", text: "Make your way through the thickets (Trial of Hornet)", action: "boss", target: "trial_hornet", bossId: "hornet" }
+      { icon: "🌸", textEn: "Descend to the station", textRu: "Спуститься к станции", action: "combat", target: "queens_station", combatDifficulty: 2, soulReward: 12 },
+      { icon: "🕸", textEn: "Make your way through the thickets", textRu: "Пробраться сквозь заросли", action: "boss", target: "trial_hornet", bossId: "hornet", combatDifficulty: 3 }
     ]
   },
   {
     id: "trial_hornet",
-    title: { en: "Trial of Hornet", ru: "Trial of Hornet" },
+    title: { en: "Trial of Hornet", ru: "Испытание Хорнет" },
     description: {
       en: "You enter an arena of vines and thorns. She is already waiting. \"Battle is a conversation without words,\" she whispers.",
       ru: "Ты входишь на площадку из лоз и колючек. Она уже ждёт. \"Сражение — это разговор без слов\", — шепчет она."
     },
     choices: [
-      { icon: "⬆", text: "Return to Greenpath", action: "navigate", target: "greenpath" },
-      { icon: "🌸", text: "To Queen's Station", action: "navigate", target: "queens_station" }
+      { icon: "⬆", textEn: "Return to Greenpath", textRu: "Вернуться в Зеленый Путь", action: "navigate", target: "greenpath" },
+      { icon: "🌸", textEn: "To Queen's Station", textRu: "К Станции Королевы", action: "navigate", target: "queens_station" }
     ]
   },
   {
     id: "queens_station",
-    title: { en: "Queen's Station", ru: "Queen's Station" },
+    title: { en: "Queen's Station", ru: "Станция Королевы" },
     description: {
       en: "There are no people here. Only drops and the rustle of spores. You feel peace, but the air is too thick.",
       ru: "Здесь нет людей. Только капли и шелест спор. Ты чувствуешь покой, но воздух слишком густой."
     },
     choices: [
-      { icon: "🍄", text: "Go to the fungal wastes (Fungal Wastes)", action: "combat", target: "fungal_wastes", combatDifficulty: 3, soulReward: 18 },
-      { icon: "🕳", text: "Descend into the depths (Deepnest)", action: "combat", target: "deepnest", combatDifficulty: 4, soulReward: 20, requiresBoss: "hornet" }
+      { icon: "🍄", textEn: "Go to the fungal wastes", textRu: "Идти к грибным пустошам", action: "combat", target: "fungal_wastes", combatDifficulty: 3, soulReward: 18 },
+      { icon: "🕳", textEn: "Descend into the depths", textRu: "Спуститься в глубины", action: "combat", target: "deepnest", combatDifficulty: 4, soulReward: 20, requiresBoss: "hornet" }
     ]
   },
   {
     id: "fungal_wastes",
-    title: { en: "Fungal Wastes", ru: "Fungal Wastes" },
+    title: { en: "Fungal Wastes", ru: "Грибные Пустоши" },
     description: {
       en: "The air is sweet, like a dream. You walk on soft soil, hearing the pops of spores.",
       ru: "Воздух сладкий, будто сон. Ты идёшь по мягкой почве, слыша хлопки спор."
     },
     choices: [
-      { icon: "⚒", text: "Enter the spore temple (Mantis Arena)", action: "boss", target: "mantis_arena", bossId: "mantis_lords" },
-      { icon: "💧", text: "Open the lift to City of Tears", action: "combat", target: "city_tears", combatDifficulty: 4, soulReward: 15 }
+      { icon: "⚒", textEn: "Enter the spore temple", textRu: "Войти в храм спор", action: "boss", target: "mantis_arena", bossId: "mantis_lords", combatDifficulty: 4 },
+      { icon: "💧", textEn: "Open the lift to City of Tears", textRu: "Открыть лифт в Город Слёз", action: "combat", target: "city_tears", combatDifficulty: 4, soulReward: 15 }
     ]
   },
   {
     id: "mantis_arena",
-    title: { en: "Mantis Arena", ru: "Mantis Arena" },
+    title: { en: "Mantis Arena", ru: "Арена Богомолов" },
     description: {
       en: "You stand among spore columns. Three silhouettes bow in unison and attack.",
       ru: "Ты стоишь среди колонн спор. Три силуэта в унисон кланяются и атакуют."
     },
     choices: [
-      { icon: "⬆", text: "Return to Queen's Station", action: "navigate", target: "queens_station" },
-      { icon: "💧", text: "Descend to City of Tears", action: "navigate", target: "city_tears" }
+      { icon: "⬆", textEn: "Return to Queen's Station", textRu: "Вернуться к Станции Королевы", action: "navigate", target: "queens_station" },
+      { icon: "💧", textEn: "Descend to City of Tears", textRu: "Спуститься в Город Слёз", action: "navigate", target: "city_tears" }
     ]
   },
   {
     id: "city_tears",
-    title: { en: "City of Tears", ru: "City of Tears" },
+    title: { en: "City of Tears", ru: "Город Слёз" },
     description: {
       en: "The sky cries. You walk across bridges where every drop seems like the step of someone invisible.",
       ru: "Небо плачет. Ты идёшь по мостам, где каждая капля кажется шагом кого-то невидимого."
     },
     choices: [
-      { icon: "⚒", text: "Enter the mage tower (Soul Sanctum)", action: "boss", target: "soul_sanctum", bossId: "soul_master" },
-      { icon: "⬇", text: "Descend into the channel (Ancient Basin)", action: "combat", target: "ancient_basin", combatDifficulty: 4, soulReward: 25 }
+      { icon: "⚒", textEn: "Enter the mage tower", textRu: "Войти в башню магов", action: "boss", target: "soul_sanctum", bossId: "soul_master", combatDifficulty: 4 },
+      { icon: "⬇", textEn: "Descend into the channel", textRu: "Спуститься в канал", action: "combat", target: "ancient_basin", combatDifficulty: 4, soulReward: 25 }
     ]
   },
   {
     id: "soul_sanctum",
-    title: { en: "Soul Sanctum", ru: "Soul Sanctum" },
+    title: { en: "Soul Sanctum", ru: "Святилище Душ" },
     description: {
       en: "The hall is full of whispers. Sparks dance. Mages strike quickly, but chaotically.",
       ru: "Зал полон шёпота. Искры танцуют. Маги бьют быстро, но хаотично."
     },
     choices: [
-      { icon: "⬇", text: "Descend to Ancient Basin", action: "navigate", target: "ancient_basin" }
+      { icon: "⬇", textEn: "Descend to Ancient Basin", textRu: "Спуститься в Древний Бассейн", action: "navigate", target: "ancient_basin" }
     ]
   },
   {
     id: "ancient_basin",
-    title: { en: "Ancient Basin", ru: "Ancient Basin" },
+    title: { en: "Ancient Basin", ru: "Древний Бассейн" },
     description: {
       en: "You stand on the edge of a mirror. The air is cold, but inside everything boils.",
       ru: "Ты стоишь на краю зеркала. Воздух холодный, но внутри всё кипит."
     },
     choices: [
-      { icon: "⚒", text: "Enter the hall of the dead vessel (Broken Vessel)", action: "boss", target: "broken_vessel", bossId: "broken_vessel" },
-      { icon: "⚫", text: "Descend into the abyss (Abyss)", action: "navigate", target: "abyss", requiresBoss: "broken_vessel" }
+      { icon: "⚒", textEn: "Enter the hall of the dead vessel", textRu: "Войти в зал мёртвого сосуда", action: "boss", target: "broken_vessel", bossId: "broken_vessel", combatDifficulty: 5 },
+      { icon: "⚫", textEn: "Descend into the abyss", textRu: "Спуститься в бездну", action: "navigate", target: "abyss", requiresBoss: "broken_vessel" }
     ]
   },
   {
     id: "broken_vessel",
-    title: { en: "Broken Vessel", ru: "Broken Vessel" },
+    title: { en: "Broken Vessel", ru: "Разбитый Сосуд" },
     description: {
       en: "Before you is a reflection — empty, but alive. It attacks as if it wants to die.",
       ru: "Перед тобой отражение — пустое, но живое. Он атакует, как будто хочет умереть."
     },
     choices: [
-      { icon: "⚫", text: "Descend to Abyss", action: "navigate", target: "abyss" },
-      { icon: "⬆", text: "Return to City of Tears", action: "navigate", target: "city_tears" }
+      { icon: "⚫", textEn: "Descend to Abyss", textRu: "Спуститься в Бездну", action: "navigate", target: "abyss" },
+      { icon: "⬆", textEn: "Return to City of Tears", textRu: "Вернуться в Город Слёз", action: "navigate", target: "city_tears" }
     ]
   },
   {
     id: "abyss",
-    title: { en: "The Abyss", ru: "The Abyss" },
+    title: { en: "The Abyss", ru: "Бездна" },
     description: {
       en: "Darkness is dense, like water. You see yourself, many of yourself — all want to kill you.",
       ru: "Тьма плотная, как вода. Ты видишь себя, множества себя — все хотят убить тебя."
     },
     choices: [
-      { icon: "⬆", text: "Return to Basin", action: "navigate", target: "ancient_basin" },
-      { icon: "⚒", text: "Go to The Black Egg Temple", action: "navigate", target: "black_egg" }
+      { icon: "⬆", textEn: "Return to Basin", textRu: "Вернуться в Бассейн", action: "navigate", target: "ancient_basin" },
+      { icon: "⚒", textEn: "Go to The Black Egg Temple", textRu: "Идти к Храму Чёрного Яйца", action: "navigate", target: "black_egg" }
     ]
   },
   {
     id: "black_egg",
-    title: { en: "The Black Egg Temple", ru: "The Black Egg Temple" },
+    title: { en: "The Black Egg Temple", ru: "Храм Чёрного Яйца" },
     description: {
       en: "You enter a hall where the air rings like metal. The vessel stands in the middle, motionless, but alive.",
       ru: "Ты входишь в зал, где воздух звонкий, как металл. Сосуд стоит посреди, неподвижный, но живой."
     },
     choices: [
-      { icon: "⚔️", text: "Fight the Hollow Knight", action: "boss", target: "black_egg", bossId: "hollow_knight" }
+      { icon: "⚔️", textEn: "Fight the Hollow Knight", textRu: "Сразиться с Пустым Рыцарем", action: "boss", target: "black_egg", bossId: "hollow_knight", combatDifficulty: 5 }
     ]
   },
   {
     id: "deepnest",
-    title: { en: "Deepnest", ru: "Deepnest" },
+    title: { en: "Deepnest", ru: "Глубокое Гнездо" },
     description: {
       en: "Web and darkness. Something crawls nearby.",
       ru: "Паутина и темнота. Что-то ползает рядом."
     },
     choices: [
-      { icon: "⬆", text: "Return to Queen's Station", action: "navigate", target: "queens_station" }
+      { icon: "⬆", textEn: "Return to Queen's Station", textRu: "Вернуться к Станции Королевы", action: "navigate", target: "queens_station" }
     ]
   }
 ];
@@ -226,6 +229,7 @@ const translations = {
     choices: "Where do you want to go?",
     locked: "Locked",
     requiresBoss: "Requires defeating",
+    combat: "Combat",
     abilities_list: {
       dash: "Dash - Dodge chance",
       thread: "Thread of Movement - Slowed time",
@@ -244,6 +248,7 @@ const translations = {
     choices: "Куда вы хотите пойти?",
     locked: "Заблокировано",
     requiresBoss: "Требуется победить",
+    combat: "Бой",
     abilities_list: {
       dash: "Рывок - шанс уворота",
       thread: "Нить движения - замедление времени",
@@ -258,7 +263,7 @@ const translations = {
 const bossNames: Record<string, { en: string; ru: string }> = {
   false_knight: { en: "False Knight", ru: "Ложный Рыцарь" },
   hornet: { en: "Hornet", ru: "Хорнет" },
-  mantis_lords: { en: "Mantis Lords", ru: "Лорды Богомолы" },
+  mantis_lords: { en: "Mantis Lords", ru: "Лорды Богомолов" },
   soul_master: { en: "Soul Master", ru: "Мастер Душ" },
   broken_vessel: { en: "Broken Vessel", ru: "Разбитый Сосуд" },
   hollow_knight: { en: "Hollow Knight", ru: "Пустой Рыцарь" }
@@ -267,6 +272,8 @@ const bossNames: Record<string, { en: string; ru: string }> = {
 export const Story = ({ language, onUpdateProfile }: StoryProps) => {
   const [progress, setProgress] = useState<StoryProgress | null>(null);
   const [loading, setLoading] = useState(true);
+  const [combatOpen, setCombatOpen] = useState(false);
+  const [currentChoice, setCurrentChoice] = useState<LocationChoice | null>(null);
   const { toast } = useToast();
   const t = translations[language];
 
@@ -288,7 +295,6 @@ export const Story = ({ language, onUpdateProfile }: StoryProps) => {
       if (error) throw error;
 
       if (!data) {
-        // Create initial progress
         const { data: newProgress, error: insertError } = await supabase
           .from("story_progress")
           .insert({
@@ -321,7 +327,6 @@ export const Story = ({ language, onUpdateProfile }: StoryProps) => {
   const handleChoice = async (choice: LocationChoice) => {
     if (!progress) return;
 
-    // Check if choice is locked
     if (choice.requiresBoss && !progress.defeated_bosses.includes(choice.requiresBoss)) {
       toast({
         title: t.locked,
@@ -333,16 +338,77 @@ export const Story = ({ language, onUpdateProfile }: StoryProps) => {
 
     if (choice.action === "navigate" && choice.target) {
       await updateLocation(choice.target);
-    } else if (choice.action === "combat") {
-      toast({
-        title: language === "en" ? "Combat started!" : "Бой начался!",
-        description: language === "en" 
-          ? "Complete the combat to continue your journey" 
-          : "Завершите бой, чтобы продолжить путешествие"
+    } else if (choice.action === "combat" || choice.action === "boss") {
+      setCurrentChoice(choice);
+      setCombatOpen(true);
+    }
+  };
+
+  const handleCombatComplete = async (won: boolean) => {
+    if (!won || !currentChoice || !progress) {
+      setCombatOpen(false);
+      setCurrentChoice(null);
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      let updates: any = {};
+
+      if (currentChoice.action === "boss" && currentChoice.bossId) {
+        updates.defeated_bosses = [...progress.defeated_bosses, currentChoice.bossId];
+        
+        // Add abilities based on boss
+        const newAbilities = [...progress.unlocked_abilities];
+        if (currentChoice.bossId === "false_knight") newAbilities.push("dash");
+        if (currentChoice.bossId === "hornet") newAbilities.push("thread");
+        if (currentChoice.bossId === "mantis_lords") newAbilities.push("wall_jump");
+        if (currentChoice.bossId === "soul_master") newAbilities.push("vengeful_spirit");
+        if (currentChoice.bossId === "broken_vessel") newAbilities.push("double_jump");
+        if (currentChoice.bossId === "hollow_knight") {
+          newAbilities.push("void_heart");
+          updates.has_void_heart = true;
+        }
+        updates.unlocked_abilities = newAbilities;
+      }
+
+      if (currentChoice.target) {
+        const visitedLocations = progress.visited_locations.includes(currentChoice.target)
+          ? progress.visited_locations
+          : [...progress.visited_locations, currentChoice.target];
+        
+        updates.current_location = currentChoice.target;
+        updates.visited_locations = visitedLocations;
+      }
+
+      const { error } = await supabase
+        .from("story_progress")
+        .update(updates)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      setProgress({
+        ...progress,
+        ...updates
       });
-      // TODO: Start combat with difficulty
-    } else if (choice.action === "boss" && choice.target) {
-      await updateLocation(choice.target);
+
+      toast({
+        title: language === "en" ? "Victory!" : "Победа!",
+        description: language === "en" ? "You progressed in the story" : "Вы продвинулись в истории"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setCombatOpen(false);
+      setCurrentChoice(null);
+      onUpdateProfile();
     }
   };
 
@@ -422,6 +488,7 @@ export const Story = ({ language, onUpdateProfile }: StoryProps) => {
             <div className="space-y-2">
               {currentLocation.choices.map((choice, index) => {
                 const isLocked = choice.requiresBoss && !progress.defeated_bosses.includes(choice.requiresBoss);
+                const choiceText = language === "en" ? choice.textEn : choice.textRu;
                 
                 return (
                   <Button
@@ -432,7 +499,7 @@ export const Story = ({ language, onUpdateProfile }: StoryProps) => {
                     disabled={isLocked}
                   >
                     <span className="mr-2">{choice.icon}</span>
-                    <span className="flex-1">{choice.text}</span>
+                    <span className="flex-1">{choiceText}</span>
                     {isLocked && (
                       <span className="text-xs text-muted-foreground ml-2">
                         ({t.locked})
@@ -486,6 +553,21 @@ export const Story = ({ language, onUpdateProfile }: StoryProps) => {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={combatOpen} onOpenChange={setCombatOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t.combat}</DialogTitle>
+          </DialogHeader>
+          <Combat 
+            language={language} 
+            onUpdate={onUpdateProfile}
+            storyMode={true}
+            storyDifficulty={currentChoice?.combatDifficulty || 2}
+            onStoryCombatComplete={handleCombatComplete}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
