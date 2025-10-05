@@ -45,8 +45,8 @@ const translations = {
   },
 };
 
-const BASIC_CASE_COST = 50;
-const LEGENDARY_CASE_COST = 150;
+const BASIC_CASE_COST = 100;
+const LEGENDARY_CASE_COST = 300;
 
 export const CaseOpening = ({ language, soul, onOpenSuccess }: CaseOpeningProps) => {
   const [opening, setOpening] = useState(false);

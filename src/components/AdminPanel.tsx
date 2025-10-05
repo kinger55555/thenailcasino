@@ -61,54 +61,43 @@ const translations = {
 export const AdminPanel = ({ language }: AdminPanelProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [soulAmount, setSoulAmount] = useState(100);
   const [dreamPointsAmount, setDreamPointsAmount] = useState(50);
   const [usesRemaining, setUsesRemaining] = useState<number | null>(null);
   const [links, setLinks] = useState<any[]>([]);
+  const [totalClaims, setTotalClaims] = useState(0);
   const { toast } = useToast();
   const t = translations[language];
 
   useEffect(() => {
-    checkAdminStatus();
-  }, []);
+    if (isAuthenticated) {
+      loadLinks();
+      loadTotalClaims();
+    }
+  }, [isAuthenticated]);
 
-  const checkAdminStatus = async () => {
+  const loadTotalClaims = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const { count, error } = await supabase
+        .from("admin_link_claims")
+        .select("*", { count: 'exact', head: true });
 
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .single();
-
-      if (!error && data) {
-        setIsAdmin(true);
-        loadLinks();
-      }
-    } catch (error) {
+      if (error) throw error;
+      setTotalClaims(count || 0);
+    } catch (error: any) {
       console.error(error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const loadLinks = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
       const { data, error } = await supabase
         .from("admin_links")
         .select(`
           *,
           admin_link_claims (count)
         `)
-        .eq("created_by", user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -167,10 +156,6 @@ export const AdminPanel = ({ language }: AdminPanelProps) => {
     }
   };
 
-  if (loading) {
-    return <div className="text-center py-10">{language === "ru" ? "Загрузка..." : "Loading..."}</div>;
-  }
-
   // Password Check
   if (!isAuthenticated) {
     return (
@@ -201,21 +186,22 @@ export const AdminPanel = ({ language }: AdminPanelProps) => {
     );
   }
 
-  if (!isAdmin) {
-    return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-primary">{t.admin}</h2>
-        <Card className="p-10 text-center text-muted-foreground">
-          <Shield className="h-16 w-16 mx-auto mb-4 text-muted" />
-          <p>{t.notAdmin}</p>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-primary">{t.admin}</h2>
+
+      {/* Total Claims Stats */}
+      <Card className="p-6 bg-primary/5">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">
+              {language === "ru" ? "Всего активаций админ-ссылок" : "Total Admin Link Claims"}
+            </p>
+            <p className="text-3xl font-bold text-primary">{totalClaims}</p>
+          </div>
+          <Shield className="h-12 w-12 text-primary opacity-50" />
+        </div>
+      </Card>
 
       {/* Create Link */}
       <Card className="p-6 space-y-4">

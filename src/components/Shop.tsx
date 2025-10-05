@@ -48,7 +48,7 @@ const translations = {
   },
 };
 
-const MASK_COST = 20; // soul per mask
+const MASK_COST = 50; // soul per mask
 
 export const Shop = ({ language, soul, dreamPoints, masks, onUpdate }: ShopProps) => {
   const [maskQuantity, setMaskQuantity] = useState(1);
