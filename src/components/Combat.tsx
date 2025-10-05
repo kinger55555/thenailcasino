@@ -484,37 +484,46 @@ export const Combat = ({ language, onUpdate, storyMode = false, storyDifficulty 
       {selectedNail && (
         <>
           {/* Difficulty Selection */}
-          <Card className="p-6 space-y-4">
-            <h3 className="font-bold text-xl">{t.selectDifficulty}</h3>
-            <div className="grid grid-cols-5 gap-2">
-              {([1, 2, 3, 4, 5] as DifficultyLevel[]).map((level) => {
-                const stats = difficultySettings[level];
-                return (
-                  <Button
-                    key={level}
-                    variant={difficulty === level ? "default" : "outline"}
-                    onClick={() => setDifficulty(level)}
-                    className="flex flex-col h-auto p-3"
-                  >
-                    <span className="font-bold text-lg">{level}</span>
-                    <span className="text-xs">{language === "ru" ? stats.labelRu : stats.label}</span>
-                  </Button>
-                );
-              })}
-            </div>
-            <div className="bg-muted/50 p-4 rounded-lg space-y-2 text-sm">
-              <p><strong>{language === "ru" ? "Здоровье врага" : "Enemy Health"}:</strong> {difficultySettings[difficulty].enemyHealth}</p>
-              <p><strong>{language === "ru" ? "Урон врага" : "Enemy Damage"}:</strong> {difficultySettings[difficulty].enemyDamage}</p>
-              <p><strong>{t.rewards}:</strong> {difficultySettings[difficulty].soulReward}+ {t.soul}{isDreamBattle ? `, ${difficultySettings[difficulty].dreamReward}+ ${t.dreamPoints}` : ""}</p>
-            </div>
-          </Card>
-
-          <div className="grid md:grid-cols-2 gap-4">
+          {!storyMode && (
             <Card className="p-6 space-y-4">
-              <h3 className="font-bold text-xl">{t.regularBattle}</h3>
+              <h3 className="font-bold text-xl">{t.selectDifficulty}</h3>
+              <div className="grid grid-cols-5 gap-2">
+                {([1, 2, 3, 4, 5] as DifficultyLevel[]).map((level) => {
+                  const stats = difficultySettings[level];
+                  return (
+                    <Button
+                      key={level}
+                      variant={difficulty === level ? "default" : "outline"}
+                      onClick={() => setDifficulty(level)}
+                      className="flex flex-col h-auto p-3"
+                    >
+                      <span className="font-bold text-lg">{level}</span>
+                      <span className="text-xs">{language === "ru" ? stats.labelRu : stats.label}</span>
+                    </Button>
+                  );
+                })}
+              </div>
+              <div className="bg-muted/50 p-4 rounded-lg space-y-2 text-sm">
+                <p><strong>{language === "ru" ? "Здоровье врага" : "Enemy Health"}:</strong> {difficultySettings[difficulty].enemyHealth}</p>
+                <p><strong>{language === "ru" ? "Урон врага" : "Enemy Damage"}:</strong> {difficultySettings[difficulty].enemyDamage}</p>
+                <p><strong>{t.rewards}:</strong> {difficultySettings[difficulty].soulReward}+ {t.soul}{isDreamBattle ? `, ${difficultySettings[difficulty].dreamReward}+ ${t.dreamPoints}` : ""}</p>
+              </div>
+            </Card>
+          )}
+
+          {storyMode ? (
+            <Card className="p-6 space-y-4">
+              <h3 className="font-bold text-xl">{language === "ru" ? "Начать бой" : "Start Battle"}</h3>
               <p className="text-sm text-muted-foreground">
-                {language === "ru" ? "Сражайтесь за Душу" : "Battle for Soul"}
+                {language === "ru" 
+                  ? `Сложность: ${difficultySettings[difficulty].labelRu}` 
+                  : `Difficulty: ${difficultySettings[difficulty].label}`}
               </p>
+              <div className="bg-muted/50 p-4 rounded-lg space-y-2 text-sm">
+                <p><strong>{language === "ru" ? "Здоровье врага" : "Enemy Health"}:</strong> {difficultySettings[difficulty].enemyHealth}</p>
+                <p><strong>{language === "ru" ? "Урон врага" : "Enemy Damage"}:</strong> {difficultySettings[difficulty].enemyDamage}</p>
+                <p><strong>{t.rewards}:</strong> {difficultySettings[difficulty].soulReward}+ {t.soul}</p>
+              </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">{t.cost}:</span>
                 <span className="font-bold">1 {t.masks}</span>
@@ -523,28 +532,44 @@ export const Combat = ({ language, onUpdate, storyMode = false, storyDifficulty 
                 {t.startBattle}
               </Button>
             </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-4">
+              <Card className="p-6 space-y-4">
+                <h3 className="font-bold text-xl">{t.regularBattle}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {language === "ru" ? "Сражайтесь за Душу" : "Battle for Soul"}
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">{t.cost}:</span>
+                  <span className="font-bold">1 {t.masks}</span>
+                </div>
+                <Button className="w-full" onClick={() => startBattle(false)}>
+                  {t.startBattle}
+                </Button>
+              </Card>
 
-            <Card className="p-6 space-y-4 border-dream">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-dream" />
-                <h3 className="font-bold text-xl text-dream">{t.dreamBattle}</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {language === "ru" ? "Сражайтесь за Душу и Очки Снов (требуется Гвоздь Снов)" : "Battle for Soul and Dream Points (requires Dream Nail)"}
-              </p>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">{t.cost}:</span>
-                <span className="font-bold">1 {t.masks}</span>
-              </div>
-              <Button 
-                className="w-full" 
-                onClick={() => startBattle(true)}
-                disabled={!selectedNail?.is_dream}
-              >
-                {t.startBattle}
-              </Button>
-            </Card>
-          </div>
+              <Card className="p-6 space-y-4 border-dream">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-dream" />
+                  <h3 className="font-bold text-xl text-dream">{t.dreamBattle}</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {language === "ru" ? "Сражайтесь за Душу и Очки Снов (требуется Гвоздь Снов)" : "Battle for Soul and Dream Points (requires Dream Nail)"}
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">{t.cost}:</span>
+                  <span className="font-bold">1 {t.masks}</span>
+                </div>
+                <Button 
+                  className="w-full" 
+                  onClick={() => startBattle(true)}
+                  disabled={!selectedNail?.is_dream}
+                >
+                  {t.startBattle}
+                </Button>
+              </Card>
+            </div>
+          )}
         </>
       )}
     </div>
