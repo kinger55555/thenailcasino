@@ -25,6 +25,8 @@ const translations = {
     signInSuccess: "Welcome back, Knight!",
     signUpSuccess: "Account created! Welcome to Hallownest.",
     authError: "Authentication failed. Please try again.",
+    guestBtn: "Continue as Guest",
+    guestSuccess: "Welcome, Guest!",
   },
   ru: {
     welcome: "Добро пожаловать, Рыцарь",
@@ -41,6 +43,8 @@ const translations = {
     signInSuccess: "С возвращением, Рыцарь!",
     signUpSuccess: "Аккаунт создан! Добро пожаловать в Халлоунест.",
     authError: "Ошибка авторизации. Попробуйте снова.",
+    guestBtn: "Войти как гость",
+    guestSuccess: "Добро пожаловать, гость!",
   },
 };
 
@@ -118,6 +122,27 @@ const Auth = () => {
       if (error) throw error;
 
       toast({ title: t.signUpSuccess });
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: t.authError,
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInAnonymously();
+
+      if (error) throw error;
+
+      toast({ title: t.guestSuccess });
       navigate("/");
     } catch (error: any) {
       toast({
@@ -224,6 +249,17 @@ const Auth = () => {
               </Button>
             </TabsContent>
           </Tabs>
+
+          <div className="mt-4 pt-4 border-t border-border">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleGuestLogin}
+              disabled={loading}
+            >
+              {t.guestBtn}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
